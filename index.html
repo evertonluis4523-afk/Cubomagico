@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0c10">
+  <meta name="description" content="Resolvedor de cubo mágico 3x3 com entrada de cores, solução automática e movimentos animados em 3D.">
+  <title>Cubo 3D — Resolva passo a passo</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230a0c10'/%3E%3Cg stroke='%230a0c10' stroke-width='2'%3E%3Crect x='10' y='10' width='14' height='14' rx='3' fill='%23f5f7fa'/%3E%3Crect x='25' y='10' width='14' height='14' rx='3' fill='%23ef4444'/%3E%3Crect x='40' y='10' width='14' height='14' rx='3' fill='%2322c55e'/%3E%3Crect x='10' y='25' width='14' height='14' rx='3' fill='%233b82f6'/%3E%3Crect x='25' y='25' width='14' height='14' rx='3' fill='%23facc15'/%3E%3Crect x='40' y='25' width='14' height='14' rx='3' fill='%23f97316'/%3E%3Crect x='10' y='40' width='14' height='14' rx='3' fill='%2322c55e'/%3E%3Crect x='25' y='40' width='14' height='14' rx='3' fill='%23f5f7fa'/%3E%3Crect x='40' y='40' width='14' height='14' rx='3' fill='%23ef4444'/%3E%3C/g%3E%3C/svg%3E">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Pular para o conteúdo</a>
+
+  <header class="app-header">
+    <a class="brand" href="#resolver" aria-label="Cubo 3D — início">
+      <span class="brand-mark" aria-hidden="true">
+        <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+      </span>
+      <span>
+        <strong>Cubo 3D</strong>
+        <small>Resolvedor 3×3</small>
+      </span>
+    </a>
+
+    <nav class="tabs" role="tablist" aria-label="Seções do aplicativo">
+      <button class="tab-button is-active" id="tab-resolver" type="button" role="tab" aria-selected="true" aria-controls="panel-resolver" data-tab="resolver">
+        Resolver
+      </button>
+      <button class="tab-button" id="tab-tutorial" type="button" role="tab" aria-selected="false" aria-controls="panel-tutorial" data-tab="tutorial">
+        Tutorial
+      </button>
+    </nav>
+
+    <button class="icon-button header-help" id="open-help" type="button" aria-label="Como preencher o cubo" title="Como preencher">
+      <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M9.1 9a3 3 0 1 1 4.8 2.4c-1 .75-1.9 1.25-1.9 2.6M12 18h.01M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20Z"/></svg>
+    </button>
+  </header>
+
+  <main id="main-content">
+    <section id="panel-resolver" role="tabpanel" aria-labelledby="tab-resolver">
+      <div class="page-intro">
+        <div>
+          <p class="eyebrow">Resolva qualquer posição válida</p>
+          <h1>Copie as cores. Acompanhe cada giro.</h1>
+        </div>
+        <div class="solver-readiness" id="solver-readiness" role="status" aria-live="polite">
+          <span class="status-dot is-loading" aria-hidden="true"></span>
+          <span>Preparando o resolvedor…</span>
+        </div>
+      </div>
+
+      <div class="workspace">
+        <section class="surface editor-panel" aria-labelledby="editor-title">
+          <div class="panel-heading">
+            <span class="step-number">1</span>
+            <div>
+              <h2 id="editor-title">Copie as seis faces</h2>
+              <p>Branco em cima, verde de frente e vermelho à direita.</p>
+            </div>
+          </div>
+
+          <div class="palette" id="color-palette" aria-label="Escolha uma cor"></div>
+
+          <div class="color-counts" id="color-counts" aria-label="Quantidade preenchida de cada cor"></div>
+
+          <div class="face-net" id="face-net" aria-label="Planificação editável do cubo"></div>
+
+          <p class="editor-tip">
+            Selecione uma cor e toque nos quadrados. Os centros ficam travados porque definem cada face.
+          </p>
+
+          <div class="button-row editor-actions">
+            <button class="button button-ghost" id="clear-cube" type="button">Limpar</button>
+            <button class="button button-ghost" id="solved-cube" type="button">Montado</button>
+            <button class="button button-secondary" id="example-cube" type="button">Carregar exemplo</button>
+          </div>
+        </section>
+
+        <section class="surface viewer-panel" aria-labelledby="viewer-title">
+          <div class="panel-heading viewer-heading">
+            <span class="step-number">2</span>
+            <div>
+              <h2 id="viewer-title">Cubo em 3D</h2>
+              <p>Arraste para olhar por qualquer lado.</p>
+            </div>
+            <button class="icon-button" id="reset-camera" type="button" aria-label="Reposicionar câmera" title="Reposicionar câmera">
+              <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5"/></svg>
+            </button>
+          </div>
+
+          <div class="cube-stage" id="cube-stage">
+            <div class="stage-orientation" aria-hidden="true">
+              <span>U · branco</span>
+              <span>F · verde</span>
+              <span>R · vermelho</span>
+            </div>
+            <div class="webgl-fallback" id="webgl-fallback" hidden>
+              Seu navegador não conseguiu abrir a visualização 3D.
+            </div>
+          </div>
+
+          <div class="move-legend" aria-label="Legenda dos movimentos">
+            <span><b>U</b> topo</span>
+            <span><b>R</b> direita</span>
+            <span><b>F</b> frente</span>
+            <span><b>'</b> anti-horário</span>
+            <span><b>2</b> meia-volta</span>
+          </div>
+        </section>
+
+        <section class="surface solution-panel" aria-labelledby="solution-title">
+          <div class="panel-heading">
+            <span class="step-number">3</span>
+            <div>
+              <h2 id="solution-title">Encontre a solução</h2>
+              <p>O cubo mostra o movimento real.</p>
+            </div>
+          </div>
+
+          <div class="validation-card is-neutral" id="validation-card" role="status" aria-live="polite">
+            <span class="validation-icon" aria-hidden="true">○</span>
+            <div>
+              <strong id="validation-title">Preencha as cores</strong>
+              <p id="validation-message">Cada cor precisa aparecer exatamente nove vezes.</p>
+            </div>
+          </div>
+
+          <button class="button button-primary button-block" id="solve-button" type="button" disabled>
+            Resolver cubo
+          </button>
+
+          <div class="playback" id="playback" hidden>
+            <div class="current-move">
+              <div>
+                <span class="overline" id="move-counter">Movimento 1 de 1</span>
+                <strong id="move-code">U</strong>
+              </div>
+              <p id="move-instruction">Gire o topo no sentido horário.</p>
+            </div>
+
+            <div class="progress-track" role="progressbar" id="solution-progress" aria-label="Progresso da solução" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+              <span id="solution-progress-bar"></span>
+            </div>
+
+            <div class="playback-controls" aria-label="Controles da animação">
+              <button class="icon-button" id="restart-solution" type="button" aria-label="Voltar ao início" title="Voltar ao início">
+                <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m11 17-5-5 5-5M18 17l-5-5 5-5"/></svg>
+              </button>
+              <button class="icon-button" id="previous-move" type="button" aria-label="Movimento anterior" title="Movimento anterior">
+                <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>
+              </button>
+              <button class="icon-button play-button" id="play-solution" type="button" aria-label="Reproduzir solução" title="Reproduzir">
+                <svg class="play-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="m8 5 11 7-11 7V5Z"/></svg>
+                <svg class="pause-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M9 5v14M15 5v14"/></svg>
+              </button>
+              <button class="icon-button" id="next-move" type="button" aria-label="Próximo movimento" title="Próximo movimento">
+                <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+              </button>
+              <button class="icon-button" id="finish-solution" type="button" aria-label="Ir ao final" title="Ir ao final">
+                <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m6 17 5-5-5-5M13 17l5-5-5-5"/></svg>
+              </button>
+            </div>
+
+            <label class="speed-control" for="animation-speed">
+              <span>Velocidade</span>
+              <select id="animation-speed">
+                <option value="900">Lenta</option>
+                <option value="560" selected>Normal</option>
+                <option value="320">Rápida</option>
+                <option value="170">Muito rápida</option>
+              </select>
+            </label>
+
+            <div class="move-sequence-wrap">
+              <span class="overline">Sequência completa</span>
+              <div class="move-sequence" id="move-sequence"></div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <section id="panel-tutorial" role="tabpanel" aria-labelledby="tab-tutorial" hidden>
+      <div class="tutorial-hero">
+        <div>
+          <p class="eyebrow">Método iniciante</p>
+          <h1>Aprenda a resolver sem o automático</h1>
+          <p>Sete etapas, cinco sequências curtas e sempre uma camada de cada vez.</p>
+        </div>
+        <div class="tutorial-demo surface">
+          <div class="tutorial-stage" id="tutorial-stage"></div>
+          <div class="button-row tutorial-demo-actions">
+            <button class="button button-ghost" id="tutorial-reset" type="button">Reiniciar 3D</button>
+            <button class="button button-secondary" id="tutorial-demo-move" type="button" data-algorithm="R U R' U'">Ver movimento básico</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="notation surface">
+        <div>
+          <p class="eyebrow">Antes de começar</p>
+          <h2>Como ler as letras</h2>
+          <p>Olhe diretamente para a face indicada. Letra sozinha gira ¼ de volta no sentido horário; <b>'</b> inverte o sentido; <b>2</b> gira meia-volta.</p>
+        </div>
+        <div class="notation-grid">
+          <span><b>U</b> topo</span><span><b>D</b> base</span><span><b>R</b> direita</span>
+          <span><b>L</b> esquerda</span><span><b>F</b> frente</span><span><b>B</b> trás</span>
+        </div>
+      </div>
+
+      <div class="tutorial-layout">
+        <nav class="tutorial-index surface" aria-label="Etapas do tutorial">
+          <p class="overline">Etapas</p>
+          <a href="#passo-1"><span>1</span>Cruz branca</a>
+          <a href="#passo-2"><span>2</span>Cantos brancos</a>
+          <a href="#passo-3"><span>3</span>Camada do meio</a>
+          <a href="#passo-4"><span>4</span>Cruz amarela</a>
+          <a href="#passo-5"><span>5</span>Bordas amarelas</a>
+          <a href="#passo-6"><span>6</span>Posicionar cantos</a>
+          <a href="#passo-7"><span>7</span>Girar cantos</a>
+        </nav>
+
+        <div class="tutorial-steps">
+          <article class="tutorial-step surface" id="passo-1">
+            <span class="step-number">1</span>
+            <div class="step-content">
+              <p class="eyebrow">Primeira camada</p>
+              <h2>Faça a cruz branca</h2>
+              <p>Monte as quatro bordas brancas ao redor do centro branco. Confira também as laterais: a segunda cor de cada borda precisa coincidir com o centro daquela face.</p>
+              <div class="goal-grid" aria-label="Representação de uma cruz branca">
+                <i></i><i class="white"></i><i></i><i class="white"></i><i class="white"></i><i class="white"></i><i></i><i class="white"></i><i></i>
+              </div>
+              <p class="step-note">Este passo é intuitivo: leve uma borda por vez sem desmontar as já alinhadas.</p>
+            </div>
+          </article>
+
+          <article class="tutorial-step surface" id="passo-2">
+            <span class="step-number">2</span>
+            <div class="step-content">
+              <p class="eyebrow">Complete a face branca</p>
+              <h2>Encaixe os quatro cantos</h2>
+              <p>Mantenha o branco para cima. Coloque o canto desejado logo abaixo do espaço correto, na posição frontal direita, e repita a sequência até encaixar.</p>
+              <button class="algorithm" type="button" data-demo="R' D' R D"><code>R' D' R D</code><span>Animar no 3D</span></button>
+              <p class="step-note">Se o canto já estiver em cima, mas errado, use a mesma sequência para retirá-lo e depois encaixe novamente.</p>
+            </div>
+          </article>
+
+          <article class="tutorial-step surface" id="passo-3">
+            <span class="step-number">3</span>
+            <div class="step-content">
+              <p class="eyebrow">Duas camadas</p>
+              <h2>Resolva a camada do meio</h2>
+              <p>Vire o branco para baixo. Procure no topo uma borda sem amarelo, alinhe sua cor frontal com o centro e veja se a outra cor precisa entrar à direita ou à esquerda.</p>
+              <div class="algorithm-pair">
+                <button class="algorithm" type="button" data-demo="U R U' R' U' F' U F"><small>Entra à direita</small><code>U R U' R' U' F' U F</code><span>Animar</span></button>
+                <button class="algorithm" type="button" data-demo="U' L' U L U F U' F'"><small>Entra à esquerda</small><code>U' L' U L U F U' F'</code><span>Animar</span></button>
+              </div>
+            </div>
+          </article>
+
+          <article class="tutorial-step surface" id="passo-4">
+            <span class="step-number">4</span>
+            <div class="step-content">
+              <p class="eyebrow">Última camada</p>
+              <h2>Forme a cruz amarela</h2>
+              <p>Com o amarelo para cima, você verá um ponto, um “L” ou uma linha. Repita a sequência até formar a cruz. Na linha, mantenha-a horizontal; no “L”, deixe as pontas para trás e para a esquerda.</p>
+              <button class="algorithm" type="button" data-demo="F R U R' U' F'"><code>F R U R' U' F'</code><span>Animar no 3D</span></button>
+            </div>
+          </article>
+
+          <article class="tutorial-step surface" id="passo-5">
+            <span class="step-number">5</span>
+            <div class="step-content">
+              <p class="eyebrow">Alinhe as laterais</p>
+              <h2>Posicione as bordas amarelas</h2>
+              <p>A cruz está pronta, mas as cores laterais podem não coincidir com os centros. A sequência troca as bordas superiores da frente e da esquerda.</p>
+              <button class="algorithm" type="button" data-demo="R U R' U R U2 R' U"><code>R U R' U R U2 R' U</code><span>Animar no 3D</span></button>
+              <p class="step-note">Se as duas peças erradas estiverem em lados opostos, faça uma vez, reposicione e repita.</p>
+            </div>
+          </article>
+
+          <article class="tutorial-step surface" id="passo-6">
+            <span class="step-number">6</span>
+            <div class="step-content">
+              <p class="eyebrow">Lugar antes da orientação</p>
+              <h2>Posicione os cantos amarelos</h2>
+              <p>Um canto está no lugar correto quando possui as mesmas três cores dos centros ao redor, mesmo que o amarelo esteja virado para o lado. Mantenha um canto correto no alto, à frente e à direita.</p>
+              <button class="algorithm" type="button" data-demo="U R U' L' U R' U' L"><code>U R U' L' U R' U' L</code><span>Animar no 3D</span></button>
+              <p class="step-note">Se nenhum canto estiver no lugar, execute uma vez de qualquer posição e procure novamente.</p>
+            </div>
+          </article>
+
+          <article class="tutorial-step surface" id="passo-7">
+            <span class="step-number">7</span>
+            <div class="step-content">
+              <p class="eyebrow">Finalização</p>
+              <h2>Gire os cantos amarelos</h2>
+              <p>Coloque um canto errado no alto, à frente e à direita. Repita a sequência até o amarelo ficar para cima. Depois mova somente o topo para trazer o próximo canto.</p>
+              <button class="algorithm" type="button" data-demo="R' D' R D R' D' R D"><code>R' D' R D</code><span>Ver duas repetições</span></button>
+              <div class="warning-box">
+                <strong>Não pare no meio.</strong>
+                <p>O cubo parecerá bagunçado. Complete sempre o último <b>D</b>, não gire o cubo inteiro e continue até todos os cantos ficarem amarelos.</p>
+              </div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>O cálculo acontece no seu navegador. Nenhuma cor é enviada para fora do aparelho.</p>
+  </footer>
+
+  <dialog id="help-dialog" aria-labelledby="help-title">
+    <form method="dialog">
+      <div class="dialog-header">
+        <div>
+          <p class="eyebrow">Entrada correta</p>
+          <h2 id="help-title">Como copiar o seu cubo</h2>
+        </div>
+        <button class="icon-button" type="submit" aria-label="Fechar ajuda">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>
+        </button>
+      </div>
+      <ol class="help-steps">
+        <li><span>1</span><p>Segure o cubo com o <b>centro branco para cima</b> e o <b>centro verde de frente</b>.</p></li>
+        <li><span>2</span><p>Selecione uma cor e pinte cada quadrado exatamente como aparece no cubo real.</p></li>
+        <li><span>3</span><p>Ao trocar de face, vire o cubo inteiro sem girar nenhuma camada e preserve a orientação indicada na planificação.</p></li>
+      </ol>
+      <button class="button button-primary button-block" type="submit">Entendi</button>
+    </form>
+  </dialog>
+
+  <div class="toast-region" id="toast-region" aria-live="polite" aria-atomic="true"></div>
+
+  <script src="./vendor/three/three.min.js"></script>
+  <script src="./vendor/three/OrbitControls.js"></script>
+  <script src="./vendor/cubejs/cube.js"></script>
+  <script src="./vendor/cubejs/solve.js"></script>
+  <script src="./vendor/cubejs/async.js"></script>
+  <script src="./cube3d.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>
