@@ -1450,6 +1450,76 @@ dialog form {
   }
 }
 
+@media (max-width: 820px) {
+  body.is-cube-ready:not(.has-solution) #solve-button {
+    position: fixed;
+    z-index: 42;
+    right: 14px;
+    bottom: calc(76px + env(safe-area-inset-bottom));
+    left: 14px;
+    width: auto;
+    min-height: 52px;
+    box-shadow: 0 12px 34px rgba(0, 0, 0, .58);
+  }
+
+  body.has-solution main {
+    padding-bottom: calc(250px + env(safe-area-inset-bottom));
+  }
+
+  body.has-solution #panel-resolver .current-move {
+    position: fixed;
+    z-index: 42;
+    right: 12px;
+    bottom: calc(140px + env(safe-area-inset-bottom));
+    left: 12px;
+    display: grid;
+    grid-template-columns: 68px minmax(0, 1fr);
+    min-height: 72px;
+    padding: 8px;
+    background: rgba(19, 23, 29, .97);
+    border: 1px solid var(--line-strong);
+    border-radius: 13px;
+    box-shadow: 0 14px 38px rgba(0, 0, 0, .58);
+    backdrop-filter: blur(14px);
+  }
+
+  body.has-solution #panel-resolver .current-move > div {
+    width: auto;
+    min-height: 54px;
+    flex-basis: auto;
+  }
+
+  body.has-solution #panel-resolver .current-move p {
+    font-size: .78rem;
+    line-height: 1.35;
+  }
+
+  body.has-solution #panel-resolver .playback-controls {
+    position: fixed;
+    z-index: 42;
+    right: 12px;
+    bottom: calc(76px + env(safe-area-inset-bottom));
+    left: 12px;
+    min-height: 56px;
+    padding: 5px 8px;
+    background: rgba(19, 23, 29, .97);
+    border: 1px solid var(--line-strong);
+    border-radius: 13px;
+    box-shadow: 0 12px 34px rgba(0, 0, 0, .58);
+    backdrop-filter: blur(14px);
+  }
+
+  body.has-solution #panel-resolver .playback-controls .icon-button {
+    width: 40px;
+    height: 40px;
+  }
+
+  body.has-solution #panel-resolver .playback-controls .play-button {
+    width: 48px;
+    height: 48px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -5653,7 +5723,13 @@ dialog form {
     elements.validationTitle.textContent = validation.title;
     elements.validationMessage.textContent = validation.message;
     elements.solveButton.disabled = !validation.valid || !state.solverReady || state.busy;
+    updateMobileActionState(validation);
     return validation;
+  }
+
+  function updateMobileActionState(validation) {
+    const ready = validation.valid && state.solverReady && !state.busy && state.solution.length === 0;
+    document.body.classList.toggle('is-cube-ready', ready);
   }
 
   function bindEvents() {
@@ -5882,6 +5958,7 @@ dialog form {
     await solverReadyPromise;
     state.busy = true;
     state.playing = false;
+    document.body.classList.remove('is-cube-ready');
     elements.solveButton.disabled = true;
     elements.solveButton.textContent = 'Calculando…';
     setValidationState('Calculando a solução', 'O processo acontece no próprio navegador.', 'neutral');
@@ -5933,6 +6010,7 @@ dialog form {
   function updateValidationButtonOnly() {
     const validation = validateCube();
     elements.solveButton.disabled = !validation.valid || !state.solverReady || state.busy;
+    updateMobileActionState(validation);
   }
 
   function renderSolution() {
@@ -5947,7 +6025,14 @@ dialog form {
       elements.moveSequence.appendChild(button);
     });
     elements.playback.hidden = state.solution.length === 0;
+    document.body.classList.toggle('has-solution', state.solution.length > 0);
     updatePlayback();
+
+    if (state.solution.length > 0 && window.matchMedia('(max-width: 820px)').matches) {
+      window.requestAnimationFrame(() => {
+        document.getElementById('cube-stage').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      });
+    }
   }
 
   function moveInstruction(move) {
@@ -6107,6 +6192,7 @@ dialog form {
     state.solutionString = '';
     state.solutionIndex = 0;
     state.inputString = '';
+    document.body.classList.remove('has-solution', 'is-cube-ready');
     elements.playback.hidden = true;
     elements.moveSequence.replaceChildren();
     elements.solveButton.textContent = 'Resolver cubo';
