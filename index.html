@@ -1580,7 +1580,7 @@ dialog form {
             <span class="step-number">1</span>
             <div>
               <h2 id="editor-title">Copie as seis faces</h2>
-              <p>Branco em cima, verde de frente e vermelho à direita.</p>
+              <p>Amarelo em cima, azul de frente e vermelho à direita.</p>
             </div>
           </div>
 
@@ -1615,8 +1615,8 @@ dialog form {
 
           <div class="cube-stage" id="cube-stage">
             <div class="stage-orientation" aria-hidden="true">
-              <span>U · branco</span>
-              <span>F · verde</span>
+              <span>U · amarelo</span>
+              <span>F · azul</span>
               <span>R · vermelho</span>
             </div>
             <div class="webgl-fallback" id="webgl-fallback" hidden>
@@ -1764,8 +1764,8 @@ dialog form {
             <div class="step-content">
               <p class="eyebrow">Complete a face branca</p>
               <h2>Encaixe os quatro cantos</h2>
-              <p>Mantenha o branco para cima. Coloque o canto desejado logo abaixo do espaço correto, na posição frontal direita, e repita a sequência até encaixar.</p>
-              <button class="algorithm" type="button" data-demo="R' D' R D"><code>R' D' R D</code><span>Animar no 3D</span></button>
+              <p>Mantenha o branco para baixo. Coloque o canto desejado acima do espaço correto, na posição frontal direita, e repita a sequência até encaixar.</p>
+              <button class="algorithm" type="button" data-demo="R U R' U'"><code>R U R' U'</code><span>Animar no 3D</span></button>
               <p class="step-note">Se o canto já estiver em cima, mas errado, use a mesma sequência para retirá-lo e depois encaixe novamente.</p>
             </div>
           </article>
@@ -1775,7 +1775,7 @@ dialog form {
             <div class="step-content">
               <p class="eyebrow">Duas camadas</p>
               <h2>Resolva a camada do meio</h2>
-              <p>Vire o branco para baixo. Procure no topo uma borda sem amarelo, alinhe sua cor frontal com o centro e veja se a outra cor precisa entrar à direita ou à esquerda.</p>
+              <p>Mantenha o branco para baixo. Procure no topo uma borda sem amarelo, alinhe sua cor frontal com o centro e veja se a outra cor precisa entrar à direita ou à esquerda.</p>
               <div class="algorithm-pair">
                 <button class="algorithm" type="button" data-demo="U R U' R' U' F' U F"><small>Entra à direita</small><code>U R U' R' U' F' U F</code><span>Animar</span></button>
                 <button class="algorithm" type="button" data-demo="U' L' U L U F U' F'"><small>Entra à esquerda</small><code>U' L' U L U F U' F'</code><span>Animar</span></button>
@@ -1849,7 +1849,7 @@ dialog form {
         </button>
       </div>
       <ol class="help-steps">
-        <li><span>1</span><p>Segure o cubo com o <b>centro branco para cima</b> e o <b>centro verde de frente</b>.</p></li>
+        <li><span>1</span><p>Segure o cubo com o <b>centro amarelo para cima</b>, o <b>centro azul de frente</b> e o <b>vermelho à direita</b>.</p></li>
         <li><span>2</span><p>Selecione uma cor e pinte cada quadrado exatamente como aparece no cubo real.</p></li>
         <li><span>3</span><p>Ao trocar de face, vire o cubo inteiro sem girar nenhuma camada e preserve a orientação indicada na planificação.</p></li>
       </ol>
@@ -4971,12 +4971,12 @@ dialog form {
   };
 
   const FACE_COLORS = {
-    U: 0xf4f7fb,
+    U: 0xffd500,
     R: 0xef3340,
-    F: 0x18b65b,
-    D: 0xffd500,
+    F: 0x1688e8,
+    D: 0xf4f7fb,
     L: 0xff7a00,
-    B: 0x1688e8
+    B: 0x18b65b
   };
 
   function createRoundedStickerGeometry(size, radius) {
@@ -5397,23 +5397,23 @@ dialog form {
   'use strict';
 
   const COLORS = {
-    U: { name: 'Branco', short: 'B', hex: '#f4f7fb' },
+    U: { name: 'Amarelo', short: 'A', hex: '#ffd500' },
     R: { name: 'Vermelho', short: 'V', hex: '#ef3340' },
-    F: { name: 'Verde', short: 'Vd', hex: '#18b65b' },
-    D: { name: 'Amarelo', short: 'A', hex: '#ffd500' },
+    F: { name: 'Azul', short: 'Az', hex: '#1688e8' },
+    D: { name: 'Branco', short: 'B', hex: '#f4f7fb' },
     L: { name: 'Laranja', short: 'L', hex: '#ff7a00' },
-    B: { name: 'Azul', short: 'Az', hex: '#1688e8' }
+    B: { name: 'Verde', short: 'Vd', hex: '#18b65b' }
   };
 
   const SERIAL_FACE_ORDER = ['U', 'R', 'F', 'D', 'L', 'B'];
   const NET_FACE_ORDER = ['U', 'L', 'F', 'R', 'B', 'D'];
   const FACE_META = {
-    U: { label: 'Cima', center: 'branco' },
+    U: { label: 'Cima', center: 'amarelo' },
     R: { label: 'Direita', center: 'vermelho' },
-    F: { label: 'Frente', center: 'verde' },
-    D: { label: 'Base', center: 'amarelo' },
+    F: { label: 'Frente', center: 'azul' },
+    D: { label: 'Base', center: 'branco' },
     L: { label: 'Esquerda', center: 'laranja' },
-    B: { label: 'Trás', center: 'azul' }
+    B: { label: 'Trás', center: 'verde' }
   };
 
   const POSITION_NAMES = [
