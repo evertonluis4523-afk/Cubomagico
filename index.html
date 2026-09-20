@@ -30,7 +30,7 @@
   --cube-white: #f4f7fb;
   --cube-yellow: #ffd500;
   --cube-red: #ef3340;
-  --cube-orange: #ff7a00;
+  --cube-orange: #f04a00;
   --cube-green: #18b65b;
   --cube-blue: #1688e8;
   --cube-empty: #343b46;
@@ -4975,7 +4975,7 @@ dialog form {
     R: 0xef3340,
     F: 0x1688e8,
     D: 0xf4f7fb,
-    L: 0xff7a00,
+    L: 0xf04a00,
     B: 0x18b65b
   };
 
@@ -5117,9 +5117,9 @@ dialog form {
       rim.position.set(-5, 2, -4);
       this.scene.add(rim);
 
-      const warm = new THREE.PointLight(0xff7a1a, 0.55, 18);
-      warm.position.set(4, -1, 3);
-      this.scene.add(warm);
+      const fill = new THREE.PointLight(0xffffff, 0.3, 18);
+      fill.position.set(4, -1, 3);
+      this.scene.add(fill);
 
       const floorMaterial = new THREE.ShadowMaterial({ color: 0x000000, opacity: 0.34 });
       const floor = new THREE.Mesh(new THREE.CircleBufferGeometry(3.25, 64), floorMaterial);
@@ -5401,7 +5401,7 @@ dialog form {
     R: { name: 'Vermelho', short: 'V', hex: '#ef3340' },
     F: { name: 'Azul', short: 'Az', hex: '#1688e8' },
     D: { name: 'Branco', short: 'B', hex: '#f4f7fb' },
-    L: { name: 'Laranja', short: 'L', hex: '#ff7a00' },
+    L: { name: 'Laranja', short: 'L', hex: '#f04a00' },
     B: { name: 'Verde', short: 'Vd', hex: '#18b65b' }
   };
 
