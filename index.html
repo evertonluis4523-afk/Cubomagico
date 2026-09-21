@@ -29,10 +29,10 @@
   --warning: #facc15;
   --cube-white: #f4f7fb;
   --cube-yellow: #ffd500;
-  --cube-red: #ef3340;
-  --cube-orange: #f04a00;
-  --cube-green: #18b65b;
-  --cube-blue: #1688e8;
+  --cube-red: #ed1c24;
+  --cube-orange: #ff6a00;
+  --cube-green: #00b94f;
+  --cube-blue: #006fe6;
   --cube-empty: #343b46;
   --radius: 16px;
   --radius-sm: 10px;
@@ -5532,14 +5532,14 @@ dialog form {
 
   const FACE_COLORS = {
     U: 0xffd500,
-    R: 0xef3340,
-    F: 0x1688e8,
-    D: 0xf4f7fb,
-    L: 0xf04a00,
-    B: 0x18b65b
+    R: 0xed1c24,
+    F: 0x006fe6,
+    D: 0xf2f2ef,
+    L: 0xff6a00,
+    B: 0x00b94f
   };
 
-  function createRoundedStickerGeometry(size, radius) {
+  function createRoundedSquareShape(size, radius) {
     const half = size / 2;
     const shape = new THREE.Shape();
     shape.moveTo(-half + radius, -half);
@@ -5551,7 +5551,30 @@ dialog form {
     shape.quadraticCurveTo(-half, half, -half, half - radius);
     shape.lineTo(-half, -half + radius);
     shape.quadraticCurveTo(-half, -half, -half + radius, -half);
+    return shape;
+  }
+
+  function createRoundedStickerGeometry(size, radius) {
+    const shape = createRoundedSquareShape(size, radius);
     return new THREE.ShapeBufferGeometry(shape, 2);
+  }
+
+  function createRoundedCubieGeometry(size, radius) {
+    const bevel = 0.035;
+    const depth = size - bevel * 2;
+    const shape = createRoundedSquareShape(size - bevel * 2, radius - bevel);
+    const geometry = new THREE.ExtrudeBufferGeometry(shape, {
+      depth: depth,
+      steps: 1,
+      curveSegments: 5,
+      bevelEnabled: true,
+      bevelThickness: bevel,
+      bevelSize: bevel,
+      bevelSegments: 2
+    });
+    geometry.translate(0, 0, -depth / 2);
+    geometry.computeVertexNormals();
+    return geometry;
   }
 
   function easeInOutCubic(value) {
@@ -5583,7 +5606,7 @@ dialog form {
     constructor(container, options) {
       this.container = container;
       this.options = Object.assign({ compact: false }, options || {});
-      this.spacing = 1.03;
+      this.spacing = 1.01;
       this.cubies = [];
       this.isTurning = false;
       this.motionId = 0;
@@ -5658,51 +5681,39 @@ dialog form {
     }
 
     _buildMaterials() {
-      this.bodyGeometry = new THREE.BoxBufferGeometry(0.95, 0.95, 0.95, 1, 1, 1);
-      this.stickerGeometry = createRoundedStickerGeometry(0.79, 0.085);
+      this.bodyGeometry = createRoundedCubieGeometry(0.95, 0.105);
+      this.stickerGeometry = createRoundedStickerGeometry(0.81, 0.095);
       this.bodyMaterial = new THREE.MeshStandardMaterial({
-        color: 0x080a0d,
-        roughness: 0.62,
-        metalness: 0.08
+        color: 0x050607,
+        roughness: 0.28,
+        metalness: 0.12
       });
       this.stickerMaterials = {};
       Object.keys(FACE_COLORS).forEach((face) => {
-        this.stickerMaterials[face] = new THREE.MeshStandardMaterial({
+        this.stickerMaterials[face] = new THREE.MeshBasicMaterial({
           color: FACE_COLORS[face],
-          emissive: FACE_COLORS[face],
-          emissiveIntensity: 0.045,
-          roughness: 0.42,
-          metalness: 0.02,
           side: THREE.FrontSide
         });
       });
     }
 
     _buildScene() {
-      const hemisphere = new THREE.HemisphereLight(0xffffff, 0x66717f, 1.18);
-      this.scene.add(hemisphere);
+      const ambient = new THREE.AmbientLight(0xffffff, 0.82);
+      this.scene.add(ambient);
 
-      const key = new THREE.DirectionalLight(0xffffff, 1.55);
-      key.position.set(4.8, 7, 5.6);
-      key.castShadow = true;
-      key.shadow.mapSize.set(1024, 1024);
-      key.shadow.camera.left = -5;
-      key.shadow.camera.right = 5;
-      key.shadow.camera.top = 5;
-      key.shadow.camera.bottom = -5;
-      this.scene.add(key);
+      const frontLight = new THREE.DirectionalLight(0xffffff, 0.5);
+      frontLight.position.set(5, 1.2, 6);
+      frontLight.castShadow = true;
+      frontLight.shadow.mapSize.set(1024, 1024);
+      frontLight.shadow.camera.left = -5;
+      frontLight.shadow.camera.right = 5;
+      frontLight.shadow.camera.top = 5;
+      frontLight.shadow.camera.bottom = -5;
+      this.scene.add(frontLight);
 
-      const rim = new THREE.DirectionalLight(0x5fa8ff, 0.75);
-      rim.position.set(-5, 2, -4);
-      this.scene.add(rim);
-
-      const fill = new THREE.PointLight(0xffffff, 0.48, 18);
-      fill.position.set(4, -1, 3);
-      this.scene.add(fill);
-
-      const lowerFill = new THREE.DirectionalLight(0xffffff, 0.68);
-      lowerFill.position.set(-2.5, -5.5, 4.2);
-      this.scene.add(lowerFill);
+      const backLight = new THREE.DirectionalLight(0xffffff, 0.24);
+      backLight.position.set(-4, -1, -5);
+      this.scene.add(backLight);
 
       const floorMaterial = new THREE.ShadowMaterial({ color: 0x000000, opacity: 0.34 });
       const floor = new THREE.Mesh(new THREE.CircleBufferGeometry(3.25, 64), floorMaterial);
@@ -5714,7 +5725,7 @@ dialog form {
 
     _createSticker(face) {
       const sticker = new THREE.Mesh(this.stickerGeometry, this.stickerMaterials[face]);
-      const offset = 0.482;
+      const offset = 0.486;
       sticker.userData.isSticker = true;
       sticker.userData.colorFace = face;
       sticker.castShadow = false;
@@ -5985,11 +5996,11 @@ dialog form {
 
   const COLORS = {
     U: { name: 'Amarelo', short: 'A', hex: '#ffd500' },
-    R: { name: 'Vermelho', short: 'V', hex: '#ef3340' },
-    F: { name: 'Azul', short: 'Az', hex: '#1688e8' },
-    D: { name: 'Branco', short: 'B', hex: '#f4f7fb' },
-    L: { name: 'Laranja', short: 'L', hex: '#f04a00' },
-    B: { name: 'Verde', short: 'Vd', hex: '#18b65b' }
+    R: { name: 'Vermelho', short: 'V', hex: '#ed1c24' },
+    F: { name: 'Azul', short: 'Az', hex: '#006fe6' },
+    D: { name: 'Branco', short: 'B', hex: '#f2f2ef' },
+    L: { name: 'Laranja', short: 'L', hex: '#ff6a00' },
+    B: { name: 'Verde', short: 'Vd', hex: '#00b94f' }
   };
 
   const SERIAL_FACE_ORDER = ['U', 'R', 'F', 'D', 'L', 'B'];
