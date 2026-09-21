@@ -623,6 +623,10 @@ main {
   display: block;
   width: 100%;
   height: 100%;
+  touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .stage-orientation {
@@ -5606,6 +5610,23 @@ dialog form {
       this.renderer.domElement.setAttribute('role', 'img');
       container.appendChild(this.renderer.domElement);
 
+      this.lastTouchEnd = 0;
+      this.preventDoubleClick = (event) => event.preventDefault();
+      this.preventDoubleTap = (event) => {
+        if (event.touches.length !== 0 || event.changedTouches.length !== 1) {
+          this.lastTouchEnd = 0;
+          return;
+        }
+        const now = event.timeStamp || performance.now();
+        if (now - this.lastTouchEnd < 360) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+        this.lastTouchEnd = now;
+      };
+      container.addEventListener('dblclick', this.preventDoubleClick, { passive: false });
+      container.addEventListener('touchend', this.preventDoubleTap, { passive: false });
+
       this.root = new THREE.Group();
       this.root.rotation.y = 0;
       this.scene.add(this.root);
@@ -5648,6 +5669,8 @@ dialog form {
       Object.keys(FACE_COLORS).forEach((face) => {
         this.stickerMaterials[face] = new THREE.MeshStandardMaterial({
           color: FACE_COLORS[face],
+          emissive: FACE_COLORS[face],
+          emissiveIntensity: 0.045,
           roughness: 0.42,
           metalness: 0.02,
           side: THREE.FrontSide
@@ -5656,7 +5679,7 @@ dialog form {
     }
 
     _buildScene() {
-      const hemisphere = new THREE.HemisphereLight(0xffffff, 0x17202a, 1.12);
+      const hemisphere = new THREE.HemisphereLight(0xffffff, 0x66717f, 1.18);
       this.scene.add(hemisphere);
 
       const key = new THREE.DirectionalLight(0xffffff, 1.55);
@@ -5673,9 +5696,13 @@ dialog form {
       rim.position.set(-5, 2, -4);
       this.scene.add(rim);
 
-      const fill = new THREE.PointLight(0xffffff, 0.3, 18);
+      const fill = new THREE.PointLight(0xffffff, 0.48, 18);
       fill.position.set(4, -1, 3);
       this.scene.add(fill);
+
+      const lowerFill = new THREE.DirectionalLight(0xffffff, 0.68);
+      lowerFill.position.set(-2.5, -5.5, 4.2);
+      this.scene.add(lowerFill);
 
       const floorMaterial = new THREE.ShadowMaterial({ color: 0x000000, opacity: 0.34 });
       const floor = new THREE.Mesh(new THREE.CircleBufferGeometry(3.25, 64), floorMaterial);
@@ -5933,6 +5960,10 @@ dialog form {
       if (this.frameId) cancelAnimationFrame(this.frameId);
       if (this.resizeObserver) this.resizeObserver.disconnect();
       if (this.controls) this.controls.dispose();
+      if (this.container) {
+        this.container.removeEventListener('dblclick', this.preventDoubleClick);
+        this.container.removeEventListener('touchend', this.preventDoubleTap);
+      }
       if (this.renderer) {
         this.renderer.dispose();
         this.renderer.domElement.remove();
