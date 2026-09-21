@@ -651,6 +651,115 @@ main {
   backdrop-filter: blur(8px);
 }
 
+.cube-move-hud {
+  position: absolute;
+  z-index: 3;
+  right: 12px;
+  bottom: 12px;
+  left: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 410px;
+  padding: 10px 12px;
+  color: var(--text);
+  background: rgba(5, 7, 10, .9);
+  border: 1px solid rgba(255, 122, 26, .48);
+  border-radius: 13px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, .34);
+  backdrop-filter: blur(10px);
+  pointer-events: none;
+}
+
+.cube-move-symbol {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 4px;
+  min-width: 104px;
+  padding-right: 10px;
+  border-right: 1px solid rgba(255, 255, 255, .12);
+}
+
+.cube-move-symbol > strong {
+  min-width: 43px;
+  color: var(--accent);
+  font-size: 1.72rem;
+  line-height: 1;
+  text-align: center;
+}
+
+.cube-move-arrow-wrap {
+  display: flex;
+  flex-direction: column;
+  width: 42px;
+  height: 46px;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+}
+
+.cube-move-arrow {
+  width: 29px;
+  height: 29px;
+  flex: 0 0 29px;
+  fill: none;
+  stroke: #fff;
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform .2s ease;
+}
+
+.cube-move-arrow.is-prime {
+  transform: scaleX(-1);
+}
+
+.cube-move-arrow.is-half {
+  opacity: .82;
+}
+
+.cube-move-degrees {
+  display: block;
+  min-width: 29px;
+  padding: 1px 4px;
+  color: #090b0e;
+  background: var(--accent);
+  border-radius: 4px;
+  font-size: .5rem;
+  font-weight: 900;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.cube-move-copy {
+  display: grid;
+  min-width: 0;
+  gap: 1px;
+}
+
+.cube-move-copy > span {
+  color: var(--faint);
+  font-size: .58rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.cube-move-copy > strong {
+  overflow: hidden;
+  font-size: .85rem;
+  line-height: 1.28;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cube-move-copy > small {
+  color: var(--muted);
+  font-size: .64rem;
+  line-height: 1.3;
+}
+
 .webgl-fallback {
   position: absolute;
   inset: 0;
@@ -1827,6 +1936,43 @@ dialog form {
     min-height: 370px;
   }
 
+  .cube-move-hud {
+    right: 8px;
+    bottom: 8px;
+    left: 8px;
+    gap: 8px;
+    padding: 9px 10px;
+  }
+
+  .cube-move-symbol {
+    min-width: 88px;
+    padding-right: 7px;
+  }
+
+  .cube-move-symbol > strong {
+    min-width: 37px;
+    font-size: 1.46rem;
+  }
+
+  .cube-move-arrow-wrap {
+    width: 36px;
+    height: 43px;
+  }
+
+  .cube-move-arrow {
+    width: 26px;
+    height: 26px;
+    flex-basis: 26px;
+  }
+
+  .cube-move-copy > strong {
+    font-size: .76rem;
+  }
+
+  .cube-move-copy > small {
+    font-size: .57rem;
+  }
+
   .photo-dialog {
     width: calc(100% - 12px);
     max-height: calc(100dvh - 12px);
@@ -2092,6 +2238,23 @@ dialog form {
               <span>U · amarelo</span>
               <span>F · azul</span>
               <span>R · vermelho</span>
+            </div>
+            <div class="cube-move-hud" id="cube-move-hud" role="status" aria-live="polite" hidden>
+              <div class="cube-move-symbol" aria-hidden="true">
+                <strong id="cube-move-code">R'</strong>
+                <span class="cube-move-arrow-wrap">
+                  <svg class="cube-move-arrow" id="cube-move-arrow" viewBox="0 0 48 48">
+                    <path d="M38 25a14 14 0 1 1-4.2-10"/>
+                    <path d="m27 13 8.5.8-.8 8.5"/>
+                  </svg>
+                  <span class="cube-move-degrees" id="cube-move-degrees">90°</span>
+                </span>
+              </div>
+              <div class="cube-move-copy">
+                <span id="cube-move-counter">Movimento 1 de 1</span>
+                <strong id="cube-move-direction">Direita · anti-horário</strong>
+                <small>Olhe diretamente para essa face</small>
+              </div>
             </div>
             <div class="webgl-fallback" id="webgl-fallback" hidden>
               Seu navegador não conseguiu abrir a visualização 3D.
@@ -6081,6 +6244,8 @@ dialog form {
       'webgl-fallback', 'validation-card', 'validation-title',
       'validation-message', 'solve-button', 'playback', 'move-counter',
       'move-code', 'move-instruction', 'solution-progress',
+      'cube-move-hud', 'cube-move-code', 'cube-move-counter',
+      'cube-move-direction', 'cube-move-arrow', 'cube-move-degrees',
       'solution-progress-bar', 'restart-solution', 'previous-move',
       'play-solution', 'next-move', 'finish-solution', 'animation-speed',
       'move-sequence', 'tutorial-reset', 'tutorial-demo-move',
@@ -7139,6 +7304,30 @@ dialog form {
     return move.endsWith("'") ? move[0] : move + "'";
   }
 
+  function updateCubeMoveHud(move, index, total) {
+    if (!move || total === 0) {
+      elements.cubeMoveHud.hidden = true;
+      return;
+    }
+
+    const faceNames = {
+      U: 'Topo', R: 'Direita', F: 'Frente',
+      D: 'Base', L: 'Esquerda', B: 'Trás'
+    };
+    const modifier = move.slice(1);
+    const direction = modifier === '2'
+      ? 'meia-volta'
+      : modifier === "'" ? 'anti-horário' : 'horário';
+
+    elements.cubeMoveHud.hidden = false;
+    elements.cubeMoveCode.textContent = move;
+    elements.cubeMoveCounter.textContent = 'Movimento ' + (index + 1) + ' de ' + total;
+    elements.cubeMoveDirection.textContent = faceNames[move[0]] + ' · ' + direction;
+    elements.cubeMoveDegrees.textContent = modifier === '2' ? '180°' : '90°';
+    elements.cubeMoveArrow.classList.toggle('is-prime', modifier === "'");
+    elements.cubeMoveArrow.classList.toggle('is-half', modifier === '2');
+  }
+
   function updatePlayback() {
     const total = state.solution.length;
     const complete = total > 0 && state.solutionIndex >= total;
@@ -7146,8 +7335,11 @@ dialog form {
 
     if (total === 0) {
       elements.playback.hidden = true;
+      updateCubeMoveHud(null, 0, 0);
       return;
     }
+
+    updateCubeMoveHud(current, state.solutionIndex, total);
 
     elements.playback.hidden = false;
     elements.moveCounter.textContent = complete
@@ -7281,6 +7473,7 @@ dialog form {
     state.inputString = '';
     document.body.classList.remove('has-solution', 'is-cube-ready');
     elements.playback.hidden = true;
+    elements.cubeMoveHud.hidden = true;
     elements.moveSequence.replaceChildren();
     elements.solveButton.textContent = 'Resolver cubo';
     if (settings.resetVisual && mainCube) mainCube.createSolvedCube();
