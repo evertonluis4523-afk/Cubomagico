@@ -1162,6 +1162,186 @@ dialog form {
   padding: 22px;
 }
 
+.photo-dialog {
+  width: min(780px, calc(100% - 24px));
+  max-height: min(900px, calc(100dvh - 24px));
+  overflow: auto;
+}
+
+.photo-dialog-body {
+  padding: 22px;
+}
+
+.photo-progress-row,
+.photo-review-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.photo-progress-row {
+  margin-top: 20px;
+  color: var(--muted);
+  font-size: .88rem;
+  font-weight: 800;
+}
+
+.photo-face-name {
+  padding: 6px 9px;
+  color: var(--text);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+}
+
+.photo-progress-track {
+  height: 7px;
+  margin-top: 9px;
+  overflow: hidden;
+  background: var(--surface-3);
+  border-radius: 999px;
+}
+
+.photo-progress-track span {
+  display: block;
+  width: 16.66%;
+  height: 100%;
+  background: var(--accent);
+  border-radius: inherit;
+  transition: width .2s ease;
+}
+
+.photo-guidance {
+  margin: 16px 0;
+  padding: 14px;
+  background: #0d1117;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.photo-guidance strong {
+  color: var(--text);
+  font-size: .94rem;
+}
+
+.photo-guidance p,
+.photo-privacy,
+.photo-review-heading p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: .84rem;
+  line-height: 1.5;
+}
+
+.photo-canvas-wrap {
+  margin-top: 14px;
+  overflow: hidden;
+  background: #06080b;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+}
+
+#photo-canvas {
+  display: block;
+  width: 100%;
+  max-height: 55dvh;
+  object-fit: contain;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.photo-corner-help {
+  min-height: 22px;
+  margin: 10px 0 0;
+  color: #ffd1af;
+  font-size: .86rem;
+  font-weight: 750;
+}
+
+.photo-actions {
+  margin-top: 12px;
+}
+
+.photo-actions .button,
+.photo-review-actions .button {
+  flex: 1 1 150px;
+}
+
+.photo-privacy {
+  padding-left: 20px;
+  position: relative;
+}
+
+.photo-privacy::before {
+  position: absolute;
+  left: 2px;
+  content: '\1F512';
+  font-size: .72rem;
+}
+
+.photo-review-heading {
+  margin: 20px 0 16px;
+}
+
+.photo-review-heading h3 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.photo-review-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.photo-review-face {
+  padding: 10px;
+  background: #0d1117;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.photo-review-face header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: .78rem;
+  font-weight: 800;
+}
+
+.photo-review-cells {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3px;
+  padding: 4px;
+  background: #252c36;
+  border-radius: 8px;
+}
+
+.photo-review-cell {
+  position: relative;
+  aspect-ratio: 1;
+  background: var(--sticker);
+  border: 0;
+  border-radius: 4px;
+}
+
+.photo-review-cell.is-uncertain::after {
+  position: absolute;
+  inset: 2px;
+  content: '';
+  border: 2px solid #111;
+  border-radius: 3px;
+  box-shadow: 0 0 0 2px var(--warning);
+}
+
+.photo-review-actions {
+  margin-top: 16px;
+}
+
 .dialog-header {
   display: flex;
   align-items: flex-start;
@@ -1405,6 +1585,23 @@ dialog form {
     min-height: 370px;
   }
 
+  .photo-dialog {
+    width: calc(100% - 12px);
+    max-height: calc(100dvh - 12px);
+  }
+
+  .photo-dialog-body {
+    padding: 16px;
+  }
+
+  .photo-review-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  #photo-canvas {
+    max-height: 48dvh;
+  }
+
   .current-move {
     align-items: flex-start;
     flex-direction: column;
@@ -1595,6 +1792,7 @@ dialog form {
           </p>
 
           <div class="button-row editor-actions">
+            <button class="button button-primary" id="open-photo-reader" type="button">Ler pelas fotos</button>
             <button class="button button-ghost" id="clear-cube" type="button">Limpar</button>
             <button class="button button-ghost" id="solved-cube" type="button">Montado</button>
             <button class="button button-secondary" id="example-cube" type="button">Carregar exemplo</button>
@@ -1855,6 +2053,62 @@ dialog form {
       </ol>
       <button class="button button-primary button-block" type="submit">Entendi</button>
     </form>
+  </dialog>
+
+  <dialog id="photo-dialog" class="photo-dialog" aria-labelledby="photo-title">
+    <div class="photo-dialog-body">
+      <div class="dialog-header">
+        <div>
+          <p class="eyebrow">Leitura automática</p>
+          <h2 id="photo-title">Fotografe as seis faces</h2>
+        </div>
+        <button class="icon-button" id="photo-close" type="button" aria-label="Fechar leitura por fotos">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>
+        </button>
+      </div>
+
+      <section id="photo-capture-view" class="photo-capture-view">
+        <div class="photo-progress-row">
+          <span id="photo-progress">Face 1 de 6</span>
+          <span class="photo-face-name" id="photo-face-name">Amarelo · U</span>
+        </div>
+        <div class="photo-progress-track" aria-hidden="true"><span id="photo-progress-bar"></span></div>
+
+        <div class="photo-guidance">
+          <strong id="photo-instruction">Centro amarelo. Deixe a borda azul voltada para baixo.</strong>
+          <p>Fotografe a face de frente, inteira e com boa luz. Depois toque nos quatro cantos na ordem indicada.</p>
+        </div>
+
+        <input id="photo-input" type="file" accept="image/*" capture="environment" hidden>
+        <button class="button button-primary button-block" id="photo-take" type="button">Tirar ou escolher foto</button>
+
+        <div class="photo-canvas-wrap" id="photo-canvas-wrap" hidden>
+          <canvas id="photo-canvas" aria-label="Foto da face do cubo para marcar os quatro cantos"></canvas>
+        </div>
+        <p class="photo-corner-help" id="photo-corner-help">Toque no canto superior esquerdo da grade.</p>
+
+        <div class="button-row photo-actions">
+          <button class="button button-ghost" id="photo-undo" type="button" disabled>Desfazer ponto</button>
+          <button class="button button-ghost" id="photo-retake" type="button" disabled>Outra foto</button>
+          <button class="button button-primary" id="photo-confirm-face" type="button" disabled>Confirmar face</button>
+        </div>
+        <p class="photo-privacy">As fotos são analisadas somente no seu aparelho e não são enviadas nem salvas.</p>
+      </section>
+
+      <section id="photo-review-view" class="photo-review-view" hidden>
+        <div class="photo-review-heading">
+          <div>
+            <h3>Confira antes de usar</h3>
+            <p id="photo-review-summary">Toque em usar e corrija qualquer quadrado diretamente na planificação.</p>
+          </div>
+        </div>
+        <div class="photo-review-grid" id="photo-review-grid"></div>
+        <div class="button-row photo-review-actions">
+          <button class="button button-ghost" id="photo-restart" type="button">Refazer fotos</button>
+          <button class="button button-primary" id="photo-apply" type="button">Usar cores reconhecidas</button>
+        </div>
+      </section>
+    </div>
   </dialog>
 
   <div class="toast-region" id="toast-region" aria-live="polite" aria-atomic="true"></div>
@@ -5416,6 +5670,19 @@ dialog form {
     B: { label: 'Trás', center: 'verde' }
   };
 
+  const PHOTO_FACE_ORDER = ['U', 'F', 'R', 'B', 'L', 'D'];
+  const PHOTO_FACE_META = {
+    U: { instruction: 'Centro amarelo. Deixe a borda azul voltada para baixo.' },
+    F: { instruction: 'Centro azul. Deixe o amarelo para cima.' },
+    R: { instruction: 'Centro vermelho. Amarelo para cima e azul à esquerda.' },
+    B: { instruction: 'Centro verde. Amarelo para cima e vermelho à esquerda.' },
+    L: { instruction: 'Centro laranja. Amarelo para cima e verde à esquerda.' },
+    D: { instruction: 'Centro branco. Deixe a borda azul voltada para cima.' }
+  };
+  const PHOTO_CORNER_LABELS = [
+    'superior esquerdo', 'superior direito', 'inferior direito', 'inferior esquerdo'
+  ];
+
   const POSITION_NAMES = [
     'superior esquerda', 'superior central', 'superior direita',
     'central esquerda', 'centro', 'central direita',
@@ -5439,6 +5706,14 @@ dialog form {
     busy: false,
     tutorialBusy: false,
     activeTab: 'resolver'
+  };
+
+  const photoState = {
+    step: 0,
+    captures: {},
+    corners: [],
+    sourceCanvas: null,
+    result: null
   };
 
   let mainCube = null;
@@ -5467,7 +5742,12 @@ dialog form {
       'solution-progress-bar', 'restart-solution', 'previous-move',
       'play-solution', 'next-move', 'finish-solution', 'animation-speed',
       'move-sequence', 'tutorial-reset', 'tutorial-demo-move',
-      'open-help', 'help-dialog', 'toast-region'
+      'open-help', 'help-dialog', 'toast-region', 'open-photo-reader',
+      'photo-dialog', 'photo-close', 'photo-capture-view', 'photo-progress',
+      'photo-progress-bar', 'photo-face-name', 'photo-instruction', 'photo-input',
+      'photo-take', 'photo-canvas-wrap', 'photo-canvas', 'photo-corner-help',
+      'photo-undo', 'photo-retake', 'photo-confirm-face', 'photo-review-view',
+      'photo-review-summary', 'photo-review-grid', 'photo-restart', 'photo-apply'
     ].forEach((id) => {
       elements[toCamelCase(id)] = document.getElementById(id);
     });
@@ -5817,6 +6097,17 @@ dialog form {
     document.querySelector('.brand').addEventListener('click', () => switchTab('resolver', false));
 
     elements.openHelp.addEventListener('click', () => elements.helpDialog.showModal());
+    elements.openPhotoReader.addEventListener('click', openPhotoReader);
+    elements.photoClose.addEventListener('click', () => elements.photoDialog.close());
+    elements.photoTake.addEventListener('click', () => elements.photoInput.click());
+    elements.photoRetake.addEventListener('click', () => elements.photoInput.click());
+    elements.photoInput.addEventListener('change', handlePhotoFile);
+    elements.photoCanvas.addEventListener('pointerdown', handlePhotoPointer);
+    elements.photoUndo.addEventListener('click', undoPhotoCorner);
+    elements.photoConfirmFace.addEventListener('click', confirmPhotoFace);
+    elements.photoRestart.addEventListener('click', resetPhotoReader);
+    elements.photoApply.addEventListener('click', applyPhotoResult);
+    elements.photoDialog.addEventListener('close', releasePhotoImage);
 
     elements.tutorialReset.addEventListener('click', () => {
       initTutorialCube();
@@ -5846,6 +6137,365 @@ dialog form {
         switchTab('resolver', false);
       }
     });
+  }
+
+  function openPhotoReader() {
+    resetPhotoReader();
+    elements.photoDialog.showModal();
+  }
+
+  function resetPhotoReader() {
+    photoState.step = 0;
+    photoState.captures = {};
+    photoState.result = null;
+    releasePhotoImage();
+    elements.photoCaptureView.hidden = false;
+    elements.photoReviewView.hidden = true;
+    renderPhotoStep();
+  }
+
+  function releasePhotoImage() {
+    photoState.corners = [];
+    photoState.sourceCanvas = null;
+    if (elements.photoInput) elements.photoInput.value = '';
+  }
+
+  function renderPhotoStep() {
+    const face = PHOTO_FACE_ORDER[photoState.step];
+    const position = photoState.step + 1;
+    elements.photoProgress.textContent = 'Face ' + position + ' de 6';
+    elements.photoProgressBar.style.width = ((position / PHOTO_FACE_ORDER.length) * 100) + '%';
+    elements.photoFaceName.textContent = COLORS[face].name + ' · ' + face;
+    elements.photoInstruction.textContent = PHOTO_FACE_META[face].instruction;
+    elements.photoCanvasWrap.hidden = true;
+    elements.photoTake.hidden = false;
+    elements.photoCornerHelp.textContent = 'Primeiro tire ou escolha uma foto desta face.';
+    elements.photoUndo.disabled = true;
+    elements.photoRetake.disabled = true;
+    elements.photoConfirmFace.disabled = true;
+    releasePhotoImage();
+  }
+
+  async function handlePhotoFile(event) {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      showToast('Escolha uma imagem da câmera ou da galeria.', true);
+      return;
+    }
+
+    const image = new Image();
+    const objectUrl = URL.createObjectURL(file);
+    try {
+      await new Promise((resolve, reject) => {
+        image.onload = resolve;
+        image.onerror = () => reject(new Error('Não foi possível abrir essa foto.'));
+        image.src = objectUrl;
+      });
+
+      const maximum = 1400;
+      const scale = Math.min(1, maximum / Math.max(image.naturalWidth, image.naturalHeight));
+      const source = document.createElement('canvas');
+      source.width = Math.max(1, Math.round(image.naturalWidth * scale));
+      source.height = Math.max(1, Math.round(image.naturalHeight * scale));
+      source.getContext('2d', { willReadFrequently: true }).drawImage(image, 0, 0, source.width, source.height);
+      photoState.sourceCanvas = source;
+      photoState.corners = [];
+
+      elements.photoCanvas.width = source.width;
+      elements.photoCanvas.height = source.height;
+      elements.photoCanvasWrap.hidden = false;
+      elements.photoTake.hidden = true;
+      elements.photoRetake.disabled = false;
+      elements.photoCornerHelp.textContent = 'Toque no canto ' + PHOTO_CORNER_LABELS[0] + ' da grade.';
+      redrawPhotoCanvas();
+    } catch (error) {
+      showToast(error.message || 'Não foi possível abrir essa foto.', true);
+    } finally {
+      URL.revokeObjectURL(objectUrl);
+      elements.photoInput.value = '';
+    }
+  }
+
+  function handlePhotoPointer(event) {
+    if (!photoState.sourceCanvas || photoState.corners.length >= 4) return;
+    event.preventDefault();
+    const rect = elements.photoCanvas.getBoundingClientRect();
+    photoState.corners.push({
+      x: (event.clientX - rect.left) * elements.photoCanvas.width / rect.width,
+      y: (event.clientY - rect.top) * elements.photoCanvas.height / rect.height
+    });
+    elements.photoUndo.disabled = photoState.corners.length === 0;
+    elements.photoConfirmFace.disabled = photoState.corners.length !== 4;
+    if (photoState.corners.length < 4) {
+      elements.photoCornerHelp.textContent = 'Agora toque no canto ' + PHOTO_CORNER_LABELS[photoState.corners.length] + '.';
+    } else {
+      elements.photoCornerHelp.textContent = 'Grade marcada. Confira o encaixe e confirme esta face.';
+    }
+    redrawPhotoCanvas();
+  }
+
+  function undoPhotoCorner() {
+    if (!photoState.corners.length) return;
+    photoState.corners.pop();
+    elements.photoUndo.disabled = photoState.corners.length === 0;
+    elements.photoConfirmFace.disabled = true;
+    elements.photoCornerHelp.textContent = 'Toque no canto ' + PHOTO_CORNER_LABELS[photoState.corners.length] + ' da grade.';
+    redrawPhotoCanvas();
+  }
+
+  function bilinearPoint(corners, horizontal, vertical) {
+    const topX = corners[0].x + (corners[1].x - corners[0].x) * horizontal;
+    const topY = corners[0].y + (corners[1].y - corners[0].y) * horizontal;
+    const bottomX = corners[3].x + (corners[2].x - corners[3].x) * horizontal;
+    const bottomY = corners[3].y + (corners[2].y - corners[3].y) * horizontal;
+    return {
+      x: topX + (bottomX - topX) * vertical,
+      y: topY + (bottomY - topY) * vertical
+    };
+  }
+
+  function redrawPhotoCanvas() {
+    if (!photoState.sourceCanvas) return;
+    const canvas = elements.photoCanvas;
+    const context = canvas.getContext('2d');
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    context.drawImage(photoState.sourceCanvas, 0, 0);
+    const size = Math.max(4, Math.min(canvas.width, canvas.height) / 70);
+
+    context.lineWidth = Math.max(3, size / 3);
+    context.strokeStyle = '#ff7a1a';
+    context.fillStyle = '#ff7a1a';
+    context.font = '800 ' + Math.max(18, size * 1.4) + 'px system-ui';
+    photoState.corners.forEach((point, index) => {
+      context.beginPath();
+      context.arc(point.x, point.y, size, 0, Math.PI * 2);
+      context.fill();
+      context.fillStyle = '#111';
+      context.fillText(String(index + 1), point.x - size * .35, point.y + size * .45);
+      context.fillStyle = '#ff7a1a';
+    });
+
+    if (photoState.corners.length === 4) {
+      context.strokeStyle = '#fff';
+      context.lineWidth = Math.max(2, size / 4);
+      for (let line = 0; line <= 3; line += 1) {
+        const fraction = line / 3;
+        const verticalStart = bilinearPoint(photoState.corners, fraction, 0);
+        const verticalEnd = bilinearPoint(photoState.corners, fraction, 1);
+        const horizontalStart = bilinearPoint(photoState.corners, 0, fraction);
+        const horizontalEnd = bilinearPoint(photoState.corners, 1, fraction);
+        context.beginPath();
+        context.moveTo(verticalStart.x, verticalStart.y);
+        context.lineTo(verticalEnd.x, verticalEnd.y);
+        context.stroke();
+        context.beginPath();
+        context.moveTo(horizontalStart.x, horizontalStart.y);
+        context.lineTo(horizontalEnd.x, horizontalEnd.y);
+        context.stroke();
+      }
+    }
+  }
+
+  function samplePhotoFace() {
+    const source = photoState.sourceCanvas;
+    const context = source.getContext('2d', { willReadFrequently: true });
+    const edgeLengths = [
+      Math.hypot(photoState.corners[1].x - photoState.corners[0].x, photoState.corners[1].y - photoState.corners[0].y),
+      Math.hypot(photoState.corners[2].x - photoState.corners[3].x, photoState.corners[2].y - photoState.corners[3].y),
+      Math.hypot(photoState.corners[3].x - photoState.corners[0].x, photoState.corners[3].y - photoState.corners[0].y),
+      Math.hypot(photoState.corners[2].x - photoState.corners[1].x, photoState.corners[2].y - photoState.corners[1].y)
+    ];
+    const radius = Math.max(2, Math.round(edgeLengths.reduce((sum, value) => sum + value, 0) / edgeLengths.length / 45));
+    const samples = [];
+
+    for (let row = 0; row < 3; row += 1) {
+      for (let column = 0; column < 3; column += 1) {
+        const point = bilinearPoint(photoState.corners, (column + .5) / 3, (row + .5) / 3);
+        const left = Math.max(0, Math.round(point.x) - radius);
+        const top = Math.max(0, Math.round(point.y) - radius);
+        const width = Math.min(source.width - left, radius * 2 + 1);
+        const height = Math.min(source.height - top, radius * 2 + 1);
+        const data = context.getImageData(left, top, width, height).data;
+        const channels = [[], [], []];
+        for (let pixel = 0; pixel < data.length; pixel += 4) {
+          channels[0].push(data[pixel]);
+          channels[1].push(data[pixel + 1]);
+          channels[2].push(data[pixel + 2]);
+        }
+        channels.forEach((values) => values.sort((a, b) => a - b));
+        const middle = Math.floor(channels[0].length / 2);
+        samples.push({ r: channels[0][middle], g: channels[1][middle], b: channels[2][middle] });
+      }
+    }
+    return samples;
+  }
+
+  function confirmPhotoFace() {
+    if (!photoState.sourceCanvas || photoState.corners.length !== 4) return;
+    const face = PHOTO_FACE_ORDER[photoState.step];
+    try {
+      photoState.captures[face] = samplePhotoFace();
+      photoState.step += 1;
+      if (photoState.step < PHOTO_FACE_ORDER.length) {
+        renderPhotoStep();
+      } else {
+        photoState.result = classifyPhotoColors(photoState.captures);
+        renderPhotoReview();
+      }
+    } catch (error) {
+      showToast('Não consegui ler essa região. Marque os quatro cantos novamente.', true);
+    }
+  }
+
+  function rgbToLab(rgb) {
+    const linear = [rgb.r, rgb.g, rgb.b].map((value) => {
+      const channel = value / 255;
+      return channel <= .04045 ? channel / 12.92 : Math.pow((channel + .055) / 1.055, 2.4);
+    });
+    const x = (linear[0] * .4124 + linear[1] * .3576 + linear[2] * .1805) / .95047;
+    const y = linear[0] * .2126 + linear[1] * .7152 + linear[2] * .0722;
+    const z = (linear[0] * .0193 + linear[1] * .1192 + linear[2] * .9505) / 1.08883;
+    const convert = (value) => value > .008856 ? Math.cbrt(value) : (7.787 * value) + (16 / 116);
+    const fx = convert(x);
+    const fy = convert(y);
+    const fz = convert(z);
+    return { l: (116 * fy) - 16, a: 500 * (fx - fy), b: 200 * (fy - fz) };
+  }
+
+  function labDistance(first, second) {
+    return Math.hypot(first.l - second.l, first.a - second.a, first.b - second.b);
+  }
+
+  function hungarian(costs) {
+    const rows = costs.length;
+    const columns = costs[0].length;
+    const u = Array(rows + 1).fill(0);
+    const v = Array(columns + 1).fill(0);
+    const p = Array(columns + 1).fill(0);
+    const way = Array(columns + 1).fill(0);
+
+    for (let row = 1; row <= rows; row += 1) {
+      p[0] = row;
+      let column0 = 0;
+      const minimum = Array(columns + 1).fill(Infinity);
+      const used = Array(columns + 1).fill(false);
+      do {
+        used[column0] = true;
+        const row0 = p[column0];
+        let delta = Infinity;
+        let column1 = 0;
+        for (let column = 1; column <= columns; column += 1) {
+          if (used[column]) continue;
+          const current = costs[row0 - 1][column - 1] - u[row0] - v[column];
+          if (current < minimum[column]) {
+            minimum[column] = current;
+            way[column] = column0;
+          }
+          if (minimum[column] < delta) {
+            delta = minimum[column];
+            column1 = column;
+          }
+        }
+        for (let column = 0; column <= columns; column += 1) {
+          if (used[column]) {
+            u[p[column]] += delta;
+            v[column] -= delta;
+          } else {
+            minimum[column] -= delta;
+          }
+        }
+        column0 = column1;
+      } while (p[column0] !== 0);
+
+      do {
+        const column1 = way[column0];
+        p[column0] = p[column1];
+        column0 = column1;
+      } while (column0 !== 0);
+    }
+
+    const assignment = Array(rows).fill(-1);
+    for (let column = 1; column <= columns; column += 1) {
+      if (p[column]) assignment[p[column] - 1] = column - 1;
+    }
+    return assignment;
+  }
+
+  function classifyPhotoColors(captures) {
+    const prototypes = Object.fromEntries(SERIAL_FACE_ORDER.map((face) => [face, rgbToLab(captures[face][4])]));
+    const items = [];
+    SERIAL_FACE_ORDER.forEach((face) => {
+      captures[face].forEach((rgb, index) => {
+        if (index !== 4) items.push({ face: face, index: index, lab: rgbToLab(rgb) });
+      });
+    });
+    const slots = [];
+    SERIAL_FACE_ORDER.forEach((face) => {
+      for (let count = 0; count < 8; count += 1) slots.push(face);
+    });
+    const costs = items.map((item) => slots.map((face) => labDistance(item.lab, prototypes[face])));
+    const assignment = hungarian(costs);
+    const faces = createBlankFaces();
+    const uncertain = new Set();
+
+    items.forEach((item, itemIndex) => {
+      const color = slots[assignment[itemIndex]];
+      faces[item.face][item.index] = color;
+      const distances = SERIAL_FACE_ORDER.map((face) => ({ face: face, value: labDistance(item.lab, prototypes[face]) }))
+        .sort((left, right) => left.value - right.value);
+      const assignedDistance = labDistance(item.lab, prototypes[color]);
+      const other = distances.find((entry) => entry.face !== color);
+      if (assignedDistance > 34 || !other || other.value - assignedDistance < 6) {
+        uncertain.add(item.face + '-' + item.index);
+      }
+    });
+    return { faces: faces, uncertain: uncertain };
+  }
+
+  function renderPhotoReview() {
+    releasePhotoImage();
+    elements.photoCaptureView.hidden = true;
+    elements.photoReviewView.hidden = false;
+    elements.photoReviewGrid.replaceChildren();
+    const uncertainCount = photoState.result.uncertain.size;
+    elements.photoReviewSummary.textContent = uncertainCount
+      ? uncertainCount + ' quadrado(s) com contorno amarelo merecem uma conferida.'
+      : 'As cores ficaram bem separadas. Confira as seis faces antes de usar.';
+
+    PHOTO_FACE_ORDER.forEach((face) => {
+      const card = document.createElement('section');
+      card.className = 'photo-review-face';
+      const header = document.createElement('header');
+      header.innerHTML = '<span>' + face + ' · ' + FACE_META[face].label + '</span><span>' + COLORS[face].name + '</span>';
+      const grid = document.createElement('div');
+      grid.className = 'photo-review-cells';
+      photoState.result.faces[face].forEach((color, index) => {
+        const cell = document.createElement('span');
+        cell.className = 'photo-review-cell';
+        cell.style.setProperty('--sticker', COLORS[color].hex);
+        if (photoState.result.uncertain.has(face + '-' + index)) cell.classList.add('is-uncertain');
+        cell.title = COLORS[color].name;
+        grid.appendChild(cell);
+      });
+      card.append(header, grid);
+      elements.photoReviewGrid.appendChild(card);
+    });
+  }
+
+  function applyPhotoResult() {
+    if (!photoState.result) return;
+    state.faces = Object.fromEntries(SERIAL_FACE_ORDER.map((face) => [face, photoState.result.faces[face].slice()]));
+    clearSolution({ resetVisual: true, silent: true });
+    updateEditor();
+    const validation = validateCube();
+    elements.photoDialog.close();
+    document.querySelector('.editor-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (validation.valid) {
+      showToast('Cores reconhecidas. O cubo está pronto para resolver.');
+    } else {
+      showToast('Cores preenchidas. Confira os quadrados destacados ou a orientação das fotos.', true);
+    }
   }
 
   function paintSticker(face, index) {
