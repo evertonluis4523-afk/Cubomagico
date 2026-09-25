@@ -93,7 +93,7 @@
       'solution-progress-bar', 'restart-solution', 'previous-move',
       'play-solution', 'next-move', 'finish-solution', 'animation-speed',
       'move-sequence', 'tutorial-reset', 'tutorial-demo-move',
-      'theme-toggle', 'open-help', 'help-dialog', 'toast-region', 'open-photo-reader',
+      'open-help', 'help-dialog', 'toast-region', 'open-photo-reader',
       'photo-dialog', 'photo-close', 'photo-capture-view', 'photo-progress',
       'photo-progress-bar', 'photo-face-name', 'photo-instruction', 'photo-input',
       'photo-center-dot', 'photo-center-label', 'photo-top-square', 'photo-top-label',
@@ -115,7 +115,6 @@
   function init() {
     const savedSession = readSession();
     cacheElements();
-    applyTheme(document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark');
     renderPalette();
     renderFaceNet();
     updateEditor();
@@ -133,16 +132,6 @@
     if (hash.startsWith('#passo-') || hash === '#tutorial') {
       switchTab('tutorial', false);
     }
-  }
-
-  function applyTheme(theme) {
-    const light = theme === 'light';
-    document.documentElement.setAttribute('data-theme', theme);
-    document.querySelector('meta[name="theme-color"]').setAttribute('content', light ? '#ffffff' : '#0a0c10');
-    elements.themeToggle.setAttribute('aria-label', light ? 'Usar tema escuro' : 'Usar tema claro');
-    elements.themeToggle.title = light ? 'Tema escuro' : 'Tema claro';
-    if (mainCube) mainCube.syncBackground();
-    if (tutorialCube) tutorialCube.syncBackground();
   }
 
   function initMainCube() {
@@ -502,18 +491,6 @@
     });
 
     elements.resetCamera.addEventListener('click', () => mainCube && mainCube.resetCamera());
-    elements.themeToggle.addEventListener('click', () => {
-      const next = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
-      try { localStorage.setItem('cubo-tema', next); } catch (error) {}
-      applyTheme(next);
-    });
-    if (window.matchMedia) {
-      window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', (event) => {
-        let saved = null;
-        try { saved = localStorage.getItem('cubo-tema'); } catch (error) {}
-        if (!saved) applyTheme(event.matches ? 'light' : 'dark');
-      });
-    }
     elements.animationSpeed.addEventListener('change', () => {
       if (mainCube) mainCube.setAnimationDuration(Number(elements.animationSpeed.value));
     });

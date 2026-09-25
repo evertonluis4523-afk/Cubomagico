@@ -6,11 +6,14 @@ para que o histórico faça sentido sem precisar abrir os diffs.
 
 ## 25/09/2026
 
+- Tema escuro removido (app só no claro; a câmera continua escura). Sem a sombra
+  no chão do 3D, que virava uma mancha cinza no fundo claro. Aviso "Cubo resolvido"
+  não cobre mais o cartão de conclusão no celular.
 - Meia-volta ("F2") animada como dois giros de 90° com pausa, e o painel conta
   "giro 1 de 2 / 2 de 2". Antes parecia um movimento só.
 - **`dc724e1`** Resolvedor em segundo plano (worker) corrigido; funciona sem internet;
   continua de onde parou ao reabrir; toque no cubo e setas do teclado avançam os movimentos.
-- **`ad6edb8`** Tema claro com botão sol/lua (segue o sistema por padrão).
+- **`ad6edb8`** Tema claro com botão sol/lua (depois o escuro foi removido).
 - **`2ac2976`** Enquadramento no celular corrigido (abas cobriam o cabeçalho); cubo não
   fica mais atrás do painel do movimento; ícone de cubo para atalho no PC e tela inicial.
 - Código separado de novo em arquivos (`styles.css`, `app.js`, `cube3d.js`, `vendor/`),

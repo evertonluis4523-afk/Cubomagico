@@ -108,8 +108,6 @@
       this.renderer.setClearColor(getComputedStyle(container).backgroundColor || '#0b0e12', 1);
       this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
       this.renderer.outputEncoding = THREE.sRGBEncoding;
-      this.renderer.shadowMap.enabled = true;
-      this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
       this.renderer.domElement.setAttribute('aria-label', 'Visualização tridimensional do cubo mágico');
       this.renderer.domElement.setAttribute('role', 'img');
       container.appendChild(this.renderer.domElement);
@@ -184,24 +182,13 @@
 
       const frontLight = new THREE.DirectionalLight(0xffffff, 0.5);
       frontLight.position.set(5, 1.2, 6);
-      frontLight.castShadow = true;
-      frontLight.shadow.mapSize.set(1024, 1024);
-      frontLight.shadow.camera.left = -5;
-      frontLight.shadow.camera.right = 5;
-      frontLight.shadow.camera.top = 5;
-      frontLight.shadow.camera.bottom = -5;
       this.scene.add(frontLight);
 
       const backLight = new THREE.DirectionalLight(0xffffff, 0.24);
       backLight.position.set(-4, -1, -5);
       this.scene.add(backLight);
-
-      const floorMaterial = new THREE.ShadowMaterial({ color: 0x000000, opacity: 0.34 });
-      const floor = new THREE.Mesh(new THREE.CircleBufferGeometry(3.25, 64), floorMaterial);
-      floor.rotation.x = -Math.PI / 2;
-      floor.position.y = -1.72;
-      floor.receiveShadow = true;
-      this.scene.add(floor);
+      // Sem chão de sombra: no fundo claro ele aparecia como uma mancha cinza
+      // recortada ao girar a câmera.
     }
 
     _createSticker(face) {
@@ -209,8 +196,6 @@
       const offset = 0.486;
       sticker.userData.isSticker = true;
       sticker.userData.colorFace = face;
-      sticker.castShadow = false;
-      sticker.receiveShadow = true;
 
       if (face === 'F') {
         sticker.position.z = offset;
@@ -239,8 +224,6 @@
       cubie.userData.coord = new THREE.Vector3(x, y, z);
 
       const body = new THREE.Mesh(this.bodyGeometry, this.bodyMaterial);
-      body.castShadow = true;
-      body.receiveShadow = true;
       cubie.add(body);
 
       if (x === 1) cubie.add(this._createSticker('R'));
@@ -312,11 +295,6 @@
       else this.camera.clearViewOffset();
       this.camera.updateProjectionMatrix();
       this.renderer.setSize(width, height, false);
-    }
-
-    syncBackground() {
-      if (!this.available) return;
-      this.renderer.setClearColor(getComputedStyle(this.container).backgroundColor, 1);
     }
 
     setBottomInset(pixels) {

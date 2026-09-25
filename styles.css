@@ -39,8 +39,9 @@
   font-size: 16px;
 }
 
-/* Tema claro: mesmas peças, tokens trocados. A leitura por câmera continua escura. */
-:root[data-theme="light"] {
+/* O app é claro. O bloco acima guarda as cores escuras da tela da câmera,
+   que continua escura para não atrapalhar a imagem ao vivo. */
+:root {
   color-scheme: light;
   --bg: #eef1f5;
   --bg-raised: #ffffff;
@@ -67,30 +68,26 @@
   --float-shadow: 0 10px 30px rgba(24, 34, 52, .16);
 }
 
-:root[data-theme="light"] .button:hover:not(:disabled) { border-color: #97a2b1; }
-:root[data-theme="light"] .button-secondary { color: #9a3412; border-color: rgba(234, 88, 12, .35); }
-:root[data-theme="light"] .move-chip.is-done { color: #9a3412; }
-:root[data-theme="light"] .algorithm code { color: #9a3412; }
-:root[data-theme="light"] .step-note { color: var(--muted); }
-:root[data-theme="light"] .stage-orientation span { color: var(--muted); border-color: var(--line); }
-:root[data-theme="light"] .cube-move-symbol { border-right-color: var(--line); }
-:root[data-theme="light"] .cube-move-arrow { stroke: var(--text); }
-:root[data-theme="light"] .current-move > div { background: var(--bg-raised); }
-:root[data-theme="light"] .algorithm { background: var(--surface-2); }
-:root[data-theme="light"] .toast { background: var(--bg-raised); }
-:root[data-theme="light"] dialog::backdrop { background: rgba(18, 24, 33, .45); }
-:root[data-theme="light"] dialog { box-shadow: 0 28px 80px rgba(24, 34, 52, .25); }
+:root .button:hover:not(:disabled) { border-color: #97a2b1; }
+:root .button-secondary { color: #9a3412; border-color: rgba(234, 88, 12, .35); }
+:root .move-chip.is-done { color: #9a3412; }
+:root .algorithm code { color: #9a3412; }
+:root .step-note { color: var(--muted); }
+:root .stage-orientation span { color: var(--muted); border-color: var(--line); }
+:root .cube-move-symbol { border-right-color: var(--line); }
+:root .cube-move-arrow { stroke: var(--text); }
+:root .current-move > div { background: var(--bg-raised); }
+:root .algorithm { background: var(--surface-2); }
+:root .toast { background: var(--bg-raised); }
+:root dialog::backdrop { background: rgba(18, 24, 33, .45); }
+:root dialog { box-shadow: 0 28px 80px rgba(24, 34, 52, .25); }
 /* Contorno para o branco não sumir no fundo claro. */
-:root[data-theme="light"] .color-swatch:not([data-color="X"]) { box-shadow: inset 0 0 0 1px rgba(18, 24, 33, .18); }
-:root[data-theme="light"] .color-swatch.is-selected { box-shadow: inset 0 0 0 1px rgba(18, 24, 33, .18), 0 0 0 3px rgba(18, 24, 33, .12); }
-:root[data-theme="light"] .color-count::before { box-shadow: 0 0 0 1px rgba(18, 24, 33, .28); }
+:root .color-swatch:not([data-color="X"]) { box-shadow: inset 0 0 0 1px rgba(18, 24, 33, .18); }
+:root .color-swatch.is-selected { box-shadow: inset 0 0 0 1px rgba(18, 24, 33, .18), 0 0 0 3px rgba(18, 24, 33, .12); }
+:root .color-count::before { box-shadow: 0 0 0 1px rgba(18, 24, 33, .28); }
 /* A câmera segue escura: desfaz os ajustes claros dentro dela. */
-:root[data-theme="light"] .photo-dialog .button-secondary { color: #ffd8bc; border-color: rgba(255, 122, 26, .3); }
-:root[data-theme="light"] .photo-dialog .button:hover:not(:disabled) { border-color: #515d6d; }
-
-.theme-toggle .icon-sun { display: none; }
-:root[data-theme="light"] .theme-toggle .icon-sun { display: block; }
-:root[data-theme="light"] .theme-toggle .icon-moon { display: none; }
+:root .photo-dialog .button-secondary { color: #ffd8bc; border-color: rgba(255, 122, 26, .3); }
+:root .photo-dialog .button:hover:not(:disabled) { border-color: #515d6d; }
 
 * {
   box-sizing: border-box;
@@ -2229,6 +2226,11 @@ dialog form {
 
   body.has-solution .toast-region {
     bottom: calc(148px + env(safe-area-inset-bottom));
+  }
+
+  /* Ao concluir, o cartão "Cubo resolvido" ocupa essa faixa: o aviso sobe. */
+  body.is-solution-complete .toast-region {
+    bottom: calc(232px + env(safe-area-inset-bottom));
   }
 
   /* No celular o cubo precisa caber inteiro entre o cabeçalho e os controles fixos. */
