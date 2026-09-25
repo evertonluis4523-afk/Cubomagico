@@ -34,27 +34,35 @@ Depois acesse `http://localhost:8080`.
 
 ## Orientação usada para digitar as cores
 
-- `U`: branco, em cima;
+- `U`: amarelo, em cima;
 - `R`: vermelho, à direita;
-- `F`: verde, à frente;
-- `D`: amarelo, embaixo;
+- `F`: azul, à frente;
+- `D`: branco, embaixo;
 - `L`: laranja, à esquerda;
-- `B`: azul, atrás.
+- `B`: verde, atrás.
 
-Os centros são fixos. Para copiar o cubo real, mantenha o centro branco em cima, o verde à frente e o vermelho à direita.
+Os centros são fixos. Para copiar o cubo real, mantenha o centro amarelo em cima, o azul à frente e o vermelho à direita.
+
+## Instalar como aplicativo
+
+O site tem manifesto e ícones próprios (`manifest.webmanifest`, `favicon.ico` e a pasta `icons/`):
+
+- **PC (Chrome):** menu ⋮ → *Transmitir, salvar e compartilhar* → *Instalar página como app* (ou *Criar atalho*). No Edge: menu … → *Aplicativos* → *Instalar este site como um aplicativo*. O atalho na área de trabalho usa o ícone do cubo.
+- **iPhone (Safari):** Compartilhar → *Adicionar à Tela de Início*.
+- **Android (Chrome):** menu ⋮ → *Adicionar à tela inicial*.
+
+Os ícones precisam do site publicado (GitHub Pages ou `http://localhost`); abrindo o `index.html` direto do disco o navegador não oferece a instalação.
 
 ## Estrutura
 
 ```text
-index.html                 Interface e conteúdo do tutorial
-styles.css                Visual responsivo
-app.js                    Editor, validação, solução e controles
-cube3d.js                 Renderização e animações do cubo
-vendor/three/             Motor gráfico 3D
-vendor/cubejs/            Modelo e resolvedor do cubo
-THIRD_PARTY_LICENSES.md   Créditos das bibliotecas
-.nojekyll                 Mantém os arquivos intactos no GitHub Pages
+index.html                 Aplicativo completo (CSS, 3D e resolvedor embutidos)
+manifest.webmanifest       Nome, cores e ícones para instalar como app
+favicon.ico, icons/        Ícone do cubo (aba, atalho no PC e tela inicial)
+THIRD_PARTY_LICENSES.md    Créditos das bibliotecas
 ```
+
+Os arquivos `app.js`, `styles.css`, `cube3d.js` etc. na raiz são cópias antigas das partes embutidas no `index.html` e **não são carregados** pela página.
 
 ## Compatibilidade
 
