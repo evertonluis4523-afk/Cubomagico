@@ -1,9 +1,15 @@
 // Mantém o app funcionando sem internet depois da primeira visita.
 // Estratégia "rede primeiro": online sempre busca a versão nova; offline usa a cópia salva.
-const CACHE = 'cubo-3d-v1';
+const CACHE = 'cubo-3d-v2';
 const PRECACHE = [
   './',
   'index.html',
+  'styles.css',
+  'app.js',
+  'cube3d.js',
+  'vendor/three/three.min.js',
+  'vendor/three/OrbitControls.js',
+  'vendor/cubejs/async.js',
   'manifest.webmanifest',
   'favicon.ico',
   'icons/icon.svg',

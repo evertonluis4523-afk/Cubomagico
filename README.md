@@ -56,17 +56,29 @@ Os ícones precisam do site publicado (GitHub Pages ou `http://localhost`); abri
 ## Estrutura
 
 ```text
-index.html                 Aplicativo completo (CSS, 3D e resolvedor embutidos)
+index.html                 Estrutura da página e conteúdo do tutorial
+styles.css                 Visual (temas claro e escuro, layout responsivo)
+app.js                     Editor, validação, solução, controles e leitura por foto
+cube3d.js                  Renderização e animações do cubo 3D
 sw.js                      Guarda o app para funcionar sem internet
 manifest.webmanifest       Nome, cores e ícones para instalar como app
 favicon.ico, icons/        Ícone do cubo (aba, atalho no PC e tela inicial)
-vendor/cubejs/             Resolvedor usado em segundo plano (worker)
-vendor/three/LICENSE       Licença do Three.js (código embutido no index.html)
+vendor/three/              Motor gráfico 3D (Three.js)
+vendor/cubejs/             Modelo e resolvedor do cubo (roda em segundo plano)
 THIRD_PARTY_LICENSES.md    Créditos das bibliotecas
+CHANGELOG.md               Histórico de mudanças
 .nojekyll                  Mantém os arquivos intactos no GitHub Pages
 ```
 
-Para mudar o app, edite o `index.html`. Não há etapa de build.
+Não há etapa de build: edite os arquivos e publique. Com internet, o app sempre busca a
+versão nova. Se criar, renomear ou apagar um arquivo usado pela página, atualize a lista
+`PRECACHE` e a versão (`cubo-3d-vN`) no `sw.js`, para o modo offline continuar completo.
+
+## Enviar mudanças pelo site do GitHub
+
+Em **Add file → Upload files**, antes de clicar em *Commit changes*, troque o texto
+"Add files via upload" por uma frase que diga o que mudou, por exemplo
+"Corrige cor laranja no 3D". Depois, anote a mudança no `CHANGELOG.md`.
 
 ## Controles da solução
 
