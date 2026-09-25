@@ -96,6 +96,11 @@
 html {
   scroll-behavior: smooth;
   background: var(--bg);
+  /* Sem zoom por toque duplo (tocar rápido em "›" ampliava a página).
+     O zoom de pinça continua funcionando. */
+  touch-action: manipulation;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
@@ -119,6 +124,7 @@ button,
 a,
 select {
   -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 button:focus-visible,
@@ -1175,6 +1181,8 @@ body.is-solution-complete .stage-tap.is-next {
   background: var(--surface-2);
   border: 1px solid var(--line);
   border-radius: 9px;
+  /* 16px: abaixo disso o iPhone amplia a página ao tocar na caixa. */
+  font-size: 16px;
 }
 
 .move-sequence-wrap .overline {

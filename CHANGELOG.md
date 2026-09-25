@@ -6,6 +6,8 @@ para que o histórico faça sentido sem precisar abrir os diffs.
 
 ## 25/09/2026
 
+- Sem zoom por toque duplo na página (o zoom de pinça continua) e sem zoom automático
+  ao tocar na caixa de velocidade no iPhone.
 - Quando a leitura não forma um cubo possível, o app aponta os quadrados suspeitos,
   sugere a correção mais provável (troca de 2 cores, canto girado, borda invertida
   ou foto girada) e permite refotografar só a face envolvida.
