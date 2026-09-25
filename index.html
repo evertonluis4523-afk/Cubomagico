@@ -77,6 +77,17 @@
 
           <div class="face-net" id="face-net" aria-label="Planificação editável do cubo"></div>
 
+          <section class="fix-card" id="fix-card" role="status" aria-live="polite" hidden>
+            <strong id="fix-title">Provável erro de leitura</strong>
+            <p id="fix-text"></p>
+            <ul class="fix-changes" id="fix-changes"></ul>
+            <button class="button button-primary" id="fix-apply" type="button">Aplicar correção</button>
+            <div class="fix-more">
+              <button class="button button-ghost" id="fix-next" type="button">Outra sugestão</button>
+              <span class="fix-retake" id="fix-retake"></span>
+            </div>
+          </section>
+
           <p class="editor-tip">
             Selecione uma cor e toque nos quadrados. Os centros ficam travados porque definem cada face.
           </p>

@@ -53,7 +53,10 @@
     playing: false,
     busy: false,
     tutorialBusy: false,
-    activeTab: 'resolver'
+    activeTab: 'resolver',
+    // Cores medidas nas fotos (Lab) por quadrado: ajudam a escolher a correção mais provável.
+    photo: null,
+    fixChoice: 0
   };
 
   const photoState = {
@@ -93,6 +96,7 @@
       'solution-progress-bar', 'restart-solution', 'previous-move',
       'play-solution', 'next-move', 'finish-solution', 'animation-speed',
       'move-sequence', 'tutorial-reset', 'tutorial-demo-move',
+      'fix-card', 'fix-title', 'fix-text', 'fix-changes', 'fix-apply', 'fix-next', 'fix-retake',
       'open-help', 'help-dialog', 'toast-region', 'open-photo-reader',
       'photo-dialog', 'photo-close', 'photo-capture-view', 'photo-progress',
       'photo-progress-bar', 'photo-face-name', 'photo-instruction', 'photo-input',
@@ -268,6 +272,7 @@
     updateFaceNet();
     updateColorCounts();
     updateValidation();
+    updateDiagnosis();
     saveSession();
   }
 
@@ -343,6 +348,7 @@
     SERIAL_FACE_ORDER.forEach((face, faceIndex) => {
       state.faces[face] = facelets.slice(faceIndex * 9, faceIndex * 9 + 9).split('');
     });
+    state.photo = null;
     clearSolution({ resetVisual: true, silent: true });
     updateEditor();
   }
@@ -384,26 +390,9 @@
     }
 
     const facelets = serializeFaces();
-    let cube;
-    try {
-      cube = Cube.fromString(facelets);
-    } catch (error) {
-      return invalidResult('Não foi possível ler essa combinação de cores.');
-    }
-
-    const data = cube.toJSON();
-    if (!isUniqueRange(data.cp, 8) || !isUniqueRange(data.ep, 12)) {
-      return invalidResult('Existe uma peça com combinação de cores impossível ou repetida.');
-    }
-    if (data.co.some((value) => !Number.isInteger(value)) || data.co.reduce((sum, value) => sum + value, 0) % 3 !== 0) {
-      return invalidResult('Um ou mais cantos parecem estar girados de forma impossível.');
-    }
-    if (data.eo.some((value) => !Number.isInteger(value)) || data.eo.reduce((sum, value) => sum + value, 0) % 2 !== 0) {
-      return invalidResult('Uma das bordas parece estar invertida. Confira as fotos e a orientação.');
-    }
-    if (permutationParity(data.cp) !== permutationParity(data.ep)) {
-      return invalidResult('Duas peças parecem trocadas. Essa posição não existe sem desmontar o cubo.');
-    }
+    const problem = faceletProblem(facelets);
+    if (problem) return invalidResult(problem);
+    const cube = Cube.fromString(facelets);
 
     return {
       valid: true,
@@ -415,6 +404,298 @@
       cube: cube,
       facelets: facelets
     };
+  }
+
+  // Devolve o motivo pelo qual a posição não existe, ou null se ela é válida.
+  function faceletProblem(facelets) {
+    let data;
+    try {
+      data = Cube.fromString(facelets).toJSON();
+    } catch (error) {
+      return 'Não foi possível ler essa combinação de cores.';
+    }
+    if (!isUniqueRange(data.cp, 8) || !isUniqueRange(data.ep, 12)) {
+      return 'Existe uma peça com combinação de cores impossível ou repetida.';
+    }
+    if (data.co.some((value) => !Number.isInteger(value)) || data.co.reduce((sum, value) => sum + value, 0) % 3 !== 0) {
+      return 'Um canto parece estar girado de forma impossível.';
+    }
+    if (data.eo.some((value) => !Number.isInteger(value)) || data.eo.reduce((sum, value) => sum + value, 0) % 2 !== 0) {
+      return 'Uma borda parece estar invertida.';
+    }
+    if (permutationParity(data.cp) !== permutationParity(data.ep)) {
+      return 'Duas peças parecem trocadas.';
+    }
+    return null;
+  }
+
+  /* ---------- Diagnóstico: onde está o erro e qual a correção mais provável ---------- */
+
+  // Posições das peças na string URFDLB (mesma numeração do cube.js).
+  const CORNER_SLOTS = [[8, 9, 20], [6, 18, 38], [0, 36, 47], [2, 45, 11], [29, 26, 15], [27, 44, 24], [33, 53, 42], [35, 17, 51]];
+  const CORNER_PIECES = ['URF', 'UFL', 'ULB', 'UBR', 'DFR', 'DLF', 'DBL', 'DRB'];
+  const EDGE_SLOTS = [[5, 10], [7, 19], [3, 37], [1, 46], [32, 16], [28, 25], [30, 43], [34, 52], [23, 12], [21, 41], [50, 39], [48, 14]];
+  const EDGE_PIECES = ['UR', 'UF', 'UL', 'UB', 'DR', 'DF', 'DL', 'DB', 'FR', 'FL', 'BL', 'BR'];
+  // Ordem dos 8 quadrados ao redor do centro, no sentido horário (para girar uma face).
+  const FACE_RING = [0, 1, 2, 5, 8, 7, 6, 3];
+
+  const keyOf = (position) => SERIAL_FACE_ORDER[Math.floor(position / 9)] + '-' + (position % 9);
+
+  function identifyPiece(colors, pieces) {
+    for (let piece = 0; piece < pieces.length; piece += 1) {
+      for (let twist = 0; twist < colors.length; twist += 1) {
+        let match = true;
+        for (let n = 0; n < colors.length; n += 1) {
+          if (colors[(twist + n) % colors.length] !== pieces[piece][n]) { match = false; break; }
+        }
+        if (match) return piece;
+      }
+    }
+    return -1;
+  }
+
+  // Quadrados de peças que não existem (cores impossíveis) ou que aparecem duas vezes.
+  function findSuspectStickers(facelets) {
+    const suspects = new Set();
+    [[CORNER_SLOTS, CORNER_PIECES], [EDGE_SLOTS, EDGE_PIECES]].forEach(([slots, pieces]) => {
+      const seen = new Map();
+      slots.forEach((slot) => {
+        const piece = identifyPiece(slot.map((position) => facelets[position]), pieces);
+        if (piece < 0) {
+          slot.forEach((position) => suspects.add(position));
+          return;
+        }
+        if (!seen.has(piece)) seen.set(piece, []);
+        seen.get(piece).push(slot);
+      });
+      seen.forEach((found) => {
+        if (found.length > 1) found.forEach((slot) => slot.forEach((position) => suspects.add(position)));
+      });
+    });
+    return suspects;
+  }
+
+  function changeCost(position, from, to, suspects) {
+    const evidence = state.photo && state.photo.labs[keyOf(position)];
+    if (evidence) {
+      const protos = state.photo.prototypes;
+      return 2 + Math.max(0, labDistance(evidence, protos[to]) - labDistance(evidence, protos[from]));
+    }
+    return suspects.has(position) ? 6 : 14;
+  }
+
+  // Procura as menores alterações que tornam a posição possível e ordena pela
+  // mais provável (com fotos: a que menos contraria as cores medidas).
+  function findFixes(facelets) {
+    const chars = facelets.split('');
+    const suspects = findSuspectStickers(facelets);
+    const found = new Map();
+    // fixedCost: usado quando as cores medidas não pesam (a face inteira girada leva as cores junto).
+    const tryChanges = (changes, kind, extraCost, fixedCost, detail) => {
+      const next = chars.slice();
+      changes.forEach((change) => { next[change.position] = change.to; });
+      const text = next.join('');
+      if (text === facelets || found.has(text) || faceletProblem(text)) return;
+      const cost = fixedCost !== undefined
+        ? fixedCost
+        : extraCost + changes.reduce((total, change) => total + changeCost(change.position, chars[change.position], change.to, suspects), 0);
+      found.set(text, { kind: kind, changes: changes, cost: cost, facelets: text, detail: detail });
+    };
+    const positions = chars.map((_, position) => position).filter((position) => position % 9 !== 4);
+    const swap = (a, b) => [{ position: a, to: chars[b] }, { position: b, to: chars[a] }];
+
+    // 1) Trocar a cor de dois quadrados (erro típico de leitura: vermelho/laranja, branco/amarelo).
+    for (let i = 0; i < positions.length; i += 1) {
+      for (let j = i + 1; j < positions.length; j += 1) {
+        if (chars[positions[i]] !== chars[positions[j]]) tryChanges(swap(positions[i], positions[j]), 'swap', 0);
+      }
+    }
+    // 2) Face fotografada girada.
+    SERIAL_FACE_ORDER.forEach((face, faceIndex) => {
+      [2, 4, 6].forEach((steps) => {
+        const changes = FACE_RING.map((cell, ringIndex) => ({
+          position: faceIndex * 9 + cell,
+          to: chars[faceIndex * 9 + FACE_RING[(ringIndex - steps + 8) % 8]]
+        })).filter((change) => change.to !== chars[change.position]);
+        if (changes.length) tryChanges(changes, 'rotate', 0, 6 + changes.length * 0.5, { face: face, degrees: steps === 4 ? 180 : 90 });
+      });
+    });
+    // 3) Canto girado ou borda invertida.
+    CORNER_SLOTS.forEach((slot) => {
+      [1, 2].forEach((turn) => tryChanges(slot.map((position, n) => ({ position: position, to: chars[slot[(n + turn) % 3]] })), 'twist', 3));
+    });
+    EDGE_SLOTS.forEach((slot) => tryChanges(swap(slot[0], slot[1]), 'flip', 3));
+
+    // 4) Sem correção simples: duas trocas entre os quadrados mais suspeitos.
+    if (!found.size) {
+      let candidates = Array.from(suspects);
+      if (state.photo) candidates = candidates.concat(state.photo.uncertain.filter((position) => !suspects.has(position)));
+      candidates = candidates.filter((position) => position % 9 !== 4).slice(0, 14);
+      const pairs = [];
+      candidates.forEach((a) => positions.forEach((b) => {
+        if (a !== b && chars[a] !== chars[b]) pairs.push([a, b]);
+      }));
+      const limited = pairs.slice(0, 260);
+      for (let i = 0; i < limited.length; i += 1) {
+        for (let j = i + 1; j < limited.length; j += 1) {
+          const [a, b] = limited[i];
+          const [c, d] = limited[j];
+          if (new Set([a, b, c, d]).size < 4) continue;
+          tryChanges(swap(a, b).concat(swap(c, d)), 'double', 2);
+        }
+      }
+    }
+
+    return { suspects: suspects, fixes: Array.from(found.values()).sort((a, b) => a.cost - b.cost).slice(0, 3) };
+  }
+
+  const positionOfKey = (key) => SERIAL_FACE_ORDER.indexOf(key[0]) * 9 + Number(key.slice(2));
+
+  function forgetPhotoSticker(face, index) {
+    if (state.photo) delete state.photo.labs[SERIAL_FACE_ORDER.indexOf(face) * 9 + index];
+  }
+
+  function describePosition(position) {
+    const face = SERIAL_FACE_ORDER[Math.floor(position / 9)];
+    return FACE_META[face].label + ', ' + POSITION_NAMES[position % 9];
+  }
+
+  // Todas as 54 posições preenchidas, mas uma cor sobrando e outra faltando:
+  // testa trocar um quadrado da cor sobrando pela que falta.
+  function findRecolorFixes(facelets) {
+    const counts = getColorCounts();
+    const over = SERIAL_FACE_ORDER.filter((color) => counts[color] === 10);
+    const under = SERIAL_FACE_ORDER.filter((color) => counts[color] === 8);
+    if (over.length !== 1 || under.length !== 1) return [];
+    const fixes = [];
+    facelets.split('').forEach((color, position) => {
+      if (color !== over[0] || position % 9 === 4) return;
+      const next = facelets.slice(0, position) + under[0] + facelets.slice(position + 1);
+      if (faceletProblem(next)) return;
+      const suspects = new Set();
+      fixes.push({ kind: 'recolor', changes: [{ position: position, to: under[0] }], cost: changeCost(position, color, under[0], suspects), facelets: next });
+    });
+    return fixes.sort((a, b) => a.cost - b.cost).slice(0, 3);
+  }
+
+  let diagnosisCache = { facelets: null, result: null };
+
+  function updateDiagnosis() {
+    const buttons = elements.faceNet.querySelectorAll('.sticker-button');
+    buttons.forEach((button) => button.classList.remove('is-suspect', 'is-fix'));
+    const facelets = serializeFaces();
+    const complete = !facelets.includes('?');
+    const validation = validateCube();
+    if (!complete || validation.valid) {
+      elements.fixCard.hidden = true;
+      return;
+    }
+
+    if (diagnosisCache.facelets !== facelets) {
+      const recolor = validation.incomplete ? findRecolorFixes(facelets) : [];
+      const result = validation.incomplete
+        ? { suspects: new Set(), fixes: recolor }
+        : findFixes(facelets);
+      diagnosisCache = { facelets: facelets, result: result };
+      state.fixChoice = 0;
+    }
+    const { suspects, fixes } = diagnosisCache.result;
+    if (validation.incomplete && !fixes.length) {
+      elements.fixCard.hidden = true;
+      return;
+    }
+
+    const fix = fixes.length ? fixes[state.fixChoice % fixes.length] : null;
+    const byPosition = (position) => elements.faceNet.querySelector(
+      '.sticker-button[data-face="' + SERIAL_FACE_ORDER[Math.floor(position / 9)] + '"][data-index="' + (position % 9) + '"]'
+    );
+    suspects.forEach((position) => { const button = byPosition(position); if (button) button.classList.add('is-suspect'); });
+    if (fix) fix.changes.forEach((change) => { const button = byPosition(change.position); if (button) button.classList.add('is-fix'); });
+
+    elements.fixCard.hidden = false;
+    const list = elements.fixChanges;
+    list.replaceChildren();
+    const colorName = (color) => COLORS[color].name.toLocaleLowerCase('pt-BR');
+
+    if (fix) {
+      const titles = {
+        swap: 'Provável erro de leitura em 2 quadrados',
+        double: 'Provável erro de leitura em 4 quadrados',
+        recolor: 'Um quadrado parece estar com a cor errada',
+        twist: 'Um canto parece girado',
+        flip: 'Uma borda parece invertida',
+        rotate: 'Uma foto parece ter sido tirada girada'
+      };
+      elements.fixTitle.textContent = titles[fix.kind];
+      if (fix.kind === 'rotate') {
+        elements.fixText.textContent = 'A face ' + FACE_META[fix.detail.face].label + ' ficaria correta girada ' + fix.detail.degrees + '°. Confira qual cor estava no topo dessa foto.';
+      } else {
+        elements.fixText.textContent = fix.kind === 'twist' || fix.kind === 'flip'
+          ? 'Se as fotos estão certas, confira essa peça no cubo real: ela pode ter sido montada invertida.'
+          : 'Confira no cubo real os quadrados marcados em laranja' +
+            (suspects.size ? ' (em vermelho, as outras cores das peças afetadas):' : ':');
+        fix.changes.forEach((change) => {
+          const item = document.createElement('li');
+          const from = serializeFaces()[change.position];
+          item.innerHTML = '<span class="fix-dot" style="--from:' + COLORS[from].hex + '"></span>' +
+            describePosition(change.position) + ': <b>' + colorName(from) + ' → ' + colorName(change.to) + '</b>' +
+            '<span class="fix-dot" style="--from:' + COLORS[change.to].hex + '"></span>';
+          list.appendChild(item);
+        });
+      }
+    } else {
+      elements.fixTitle.textContent = 'Não achei uma correção simples';
+      elements.fixText.textContent = suspects.size
+        ? 'Os quadrados com contorno vermelho formam peças que não existem. Confira-os no cubo real ou refaça a foto dessas faces.'
+        : validation.message + ' Nenhuma troca pequena resolve: confira se alguma foto foi tirada com a face errada no topo.';
+    }
+
+    elements.fixApply.hidden = !fix;
+    elements.fixNext.hidden = fixes.length < 2;
+    elements.fixNext.textContent = 'Outra sugestão (' + ((state.fixChoice % Math.max(1, fixes.length)) + 1) + '/' + fixes.length + ')';
+
+    // Refazer só as fotos das faces envolvidas, se as fotos ainda estão na memória.
+    elements.fixRetake.replaceChildren();
+    const hasPhotos = PHOTO_FACE_ORDER.every((face) => photoState.captures[face]);
+    if (hasPhotos) {
+      const positions = fix ? fix.changes.map((change) => change.position) : Array.from(suspects);
+      const faces = Array.from(new Set(positions.map((position) => SERIAL_FACE_ORDER[Math.floor(position / 9)]))).slice(0, 3);
+      faces.forEach((face) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'button button-ghost';
+        button.textContent = 'Refotografar ' + FACE_META[face].label;
+        button.addEventListener('click', () => retakeSingleFace(face));
+        elements.fixRetake.appendChild(button);
+      });
+    }
+  }
+
+  function applySuggestedFix() {
+    const fixes = diagnosisCache.result ? diagnosisCache.result.fixes : [];
+    if (!fixes.length) return;
+    const fix = fixes[state.fixChoice % fixes.length];
+    fix.changes.forEach((change) => {
+      const face = SERIAL_FACE_ORDER[Math.floor(change.position / 9)];
+      state.faces[face][change.position % 9] = change.to;
+      forgetPhotoSticker(face, change.position % 9);
+    });
+    clearSolution({ resetVisual: true, silent: true });
+    updateEditor();
+    showToast(validateCube().valid ? 'Correção aplicada. Agora é só resolver.' : 'Correção aplicada, mas ainda há algo a revisar.');
+  }
+
+  // Abre a câmera direto na face escolhida, mantendo as outras cinco fotos.
+  function retakeSingleFace(face) {
+    photoState.step = PHOTO_FACE_ORDER.indexOf(face);
+    photoState.singleFace = true;
+    photoState.result = null;
+    clearPhotoPreview();
+    elements.photoCaptureView.hidden = false;
+    elements.photoReviewView.hidden = true;
+    renderPhotoStep();
+    elements.photoDialog.showModal();
+    window.requestAnimationFrame(() => startPhotoCamera());
   }
 
   function invalidResult(message) {
@@ -462,12 +743,14 @@
       if (!button || button.disabled) return;
       event.preventDefault();
       state.faces[button.dataset.face][Number(button.dataset.index)] = null;
+      forgetPhotoSticker(button.dataset.face, Number(button.dataset.index));
       clearSolution({ resetVisual: true, silent: true });
       updateEditor();
     });
 
     elements.clearCube.addEventListener('click', () => {
       state.faces = createBlankFaces();
+      state.photo = null;
       clearSolution({ resetVisual: true, silent: true });
       updateEditor();
       showToast('Campos limpos. Os seis centros foram mantidos.');
@@ -501,6 +784,12 @@
     elements.playSolution.addEventListener('click', togglePlayback);
 
     bindStageTap();
+
+    elements.fixApply.addEventListener('click', applySuggestedFix);
+    elements.fixNext.addEventListener('click', () => {
+      state.fixChoice += 1;
+      updateDiagnosis();
+    });
 
     // Setas e espaço controlam a solução no computador.
     document.addEventListener('keydown', (event) => {
@@ -656,6 +945,7 @@
   }
 
   function resetPhotoReader() {
+    photoState.singleFace = false;
     photoState.step = 0;
     photoState.captures = {};
     photoState.result = null;
@@ -747,7 +1037,7 @@
     elements.photoTopLabel.textContent = COLORS[meta.top].name.toLocaleUpperCase('pt-BR');
     elements.photoCenterDot.style.setProperty('--guide-color', COLORS[face].hex);
     elements.photoTopSquare.style.setProperty('--guide-color', COLORS[meta.top].hex);
-    elements.photoBack.disabled = photoState.step === 0;
+    elements.photoBack.disabled = photoState.step === 0 || photoState.singleFace;
     renderPhotoFaceRail();
     clearPhotoPreview();
 
@@ -940,7 +1230,11 @@
     const face = PHOTO_FACE_ORDER[photoState.step];
     photoState.captures[face] = photoState.previewSamples.map((sample) => Object.assign({}, sample));
     photoState.step += 1;
-    if (photoState.step < PHOTO_FACE_ORDER.length) {
+    if (photoState.singleFace) {
+      photoState.singleFace = false;
+      photoState.result = classifyPhotoColors(photoState.captures);
+      renderPhotoReview();
+    } else if (photoState.step < PHOTO_FACE_ORDER.length) {
       renderPhotoStep();
     } else {
       photoState.result = classifyPhotoColors(photoState.captures);
@@ -1050,7 +1344,9 @@
         uncertain.add(item.face + '-' + item.index);
       }
     });
-    return { faces: faces, uncertain: uncertain };
+    const labs = {};
+    items.forEach((item) => { labs[item.face + '-' + item.index] = item.lab; });
+    return { faces: faces, uncertain: uncertain, labs: labs, prototypes: prototypes };
   }
 
   function renderPhotoReview() {
@@ -1059,9 +1355,13 @@
     elements.photoReviewView.hidden = false;
     elements.photoReviewGrid.replaceChildren();
     const uncertainCount = photoState.result.uncertain.size;
-    elements.photoReviewSummary.textContent = uncertainCount
-      ? uncertainCount + ' quadrado(s) com contorno amarelo merecem uma conferida.'
-      : 'As cores ficaram bem separadas. Confira as seis faces antes de usar.';
+    const readFacelets = SERIAL_FACE_ORDER.map((face) => photoState.result.faces[face].join('')).join('');
+    const problem = faceletProblem(readFacelets);
+    elements.photoReviewSummary.textContent = problem
+      ? 'Essa leitura não forma um cubo possível. Toque em usar: vou apontar o quadrado provável e sugerir a correção, sem refazer tudo.'
+      : uncertainCount
+        ? uncertainCount + ' quadrado(s) com contorno amarelo merecem uma conferida.'
+        : 'As cores ficaram bem separadas. Confira as seis faces antes de usar.';
 
     PHOTO_FACE_ORDER.forEach((face) => {
       const card = document.createElement('section');
@@ -1086,15 +1386,23 @@
   function applyPhotoResult() {
     if (!photoState.result) return;
     state.faces = Object.fromEntries(SERIAL_FACE_ORDER.map((face) => [face, photoState.result.faces[face].slice()]));
+    state.photo = {
+      labs: Object.fromEntries(Object.entries(photoState.result.labs).map(([key, lab]) => [positionOfKey(key), lab])),
+      prototypes: photoState.result.prototypes,
+      uncertain: Array.from(photoState.result.uncertain).map(positionOfKey)
+    };
+    state.fixChoice = 0;
     clearSolution({ resetVisual: true, silent: true });
     updateEditor();
     const validation = validateCube();
     elements.photoDialog.close();
-    document.querySelector('.editor-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
     if (validation.valid) {
+      document.querySelector('.editor-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
       showToast('Cores reconhecidas. O cubo está pronto para resolver.');
     } else {
-      showToast('Cores preenchidas. Confira os quadrados destacados ou a orientação das fotos.', true);
+      // Rola até a planificação: os quadrados marcados precisam aparecer junto com o cartão.
+      elements.faceNet.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      showToast('A posição lida não existe. Veja a correção sugerida.', true);
     }
   }
 
@@ -1109,6 +1417,7 @@
       }
     }
     state.faces[face][index] = newColor;
+    forgetPhotoSticker(face, index);
     clearSolution({ resetVisual: true, silent: true });
     updateEditor();
   }

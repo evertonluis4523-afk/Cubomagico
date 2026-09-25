@@ -606,6 +606,102 @@ main {
   content: "";
 }
 
+/* Diagnóstico: vermelho = peça impossível; laranja = quadrado da correção sugerida. */
+.sticker-button.is-suspect {
+  outline: 3px solid var(--danger);
+  outline-offset: 1px;
+  z-index: 1;
+}
+
+.sticker-button.is-fix {
+  outline: 3px solid var(--accent);
+  outline-offset: 1px;
+  z-index: 2;
+  animation: fix-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes fix-pulse {
+  50% { outline-offset: 3px; }
+}
+
+.fix-card {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 14px;
+  padding: 14px;
+  background: rgba(255, 122, 26, .07);
+  border: 1px solid rgba(234, 88, 12, .4);
+  border-radius: 12px;
+}
+
+.fix-card strong {
+  font-size: .9rem;
+}
+
+.fix-card p {
+  margin: 0;
+  font-size: .8rem;
+  line-height: 1.45;
+}
+
+.fix-changes {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: .8rem;
+}
+
+.fix-changes:empty {
+  display: none;
+}
+
+.fix-changes li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+}
+
+.fix-changes b {
+  color: var(--text);
+}
+
+.fix-dot {
+  width: 14px;
+  height: 14px;
+  background: var(--from);
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 1px rgba(18, 24, 33, .25);
+}
+
+.fix-more {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.fix-retake {
+  display: contents;
+}
+
+.fix-more .button {
+  flex: 1 1 40%;
+  min-height: 36px;
+  padding: 0 10px;
+  font-size: .76rem;
+}
+
+.fix-more:has(> .button[hidden]):has(> .fix-retake:empty) {
+  display: none;
+}
+
+#face-net {
+  scroll-margin-top: calc(84px + env(safe-area-inset-top));
+}
+
 .editor-tip {
   margin-bottom: 14px;
   color: var(--faint);
