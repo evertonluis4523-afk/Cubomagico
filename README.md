@@ -57,12 +57,22 @@ Os ícones precisam do site publicado (GitHub Pages ou `http://localhost`); abri
 
 ```text
 index.html                 Aplicativo completo (CSS, 3D e resolvedor embutidos)
+sw.js                      Guarda o app para funcionar sem internet
 manifest.webmanifest       Nome, cores e ícones para instalar como app
 favicon.ico, icons/        Ícone do cubo (aba, atalho no PC e tela inicial)
+vendor/cubejs/             Resolvedor usado em segundo plano (worker)
+vendor/three/LICENSE       Licença do Three.js (código embutido no index.html)
 THIRD_PARTY_LICENSES.md    Créditos das bibliotecas
+.nojekyll                  Mantém os arquivos intactos no GitHub Pages
 ```
 
-Os arquivos `app.js`, `styles.css`, `cube3d.js` etc. na raiz são cópias antigas das partes embutidas no `index.html` e **não são carregados** pela página.
+Para mudar o app, edite o `index.html`. Não há etapa de build.
+
+## Controles da solução
+
+- Toque (ou clique) no cubo para avançar; no terço esquerdo, volta. Arrastar continua girando a câmera.
+- No computador: setas ← → avançam e voltam, espaço reproduz ou pausa.
+- As cores e o movimento atual ficam salvos no navegador: ao reabrir, o app continua de onde parou.
 
 ## Compatibilidade
 
