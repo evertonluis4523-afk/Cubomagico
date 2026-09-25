@@ -6,6 +6,8 @@ para que o histórico faça sentido sem precisar abrir os diffs.
 
 ## 25/09/2026
 
+- Meia-volta ("F2") animada como dois giros de 90° com pausa, e o painel conta
+  "giro 1 de 2 / 2 de 2". Antes parecia um movimento só.
 - **`dc724e1`** Resolvedor em segundo plano (worker) corrigido; funciona sem internet;
   continua de onde parou ao reabrir; toque no cubo e setas do teclado avançam os movimentos.
 - **`ad6edb8`** Tema claro com botão sol/lua (segue o sistema por padrão).

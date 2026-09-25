@@ -362,7 +362,26 @@
       this.isTurning = false;
     }
 
-    turn(move, duration) {
+    // Meia-volta ("U2") vira dois giros de 90° com uma pausa, para não parecer um
+    // movimento só. Em velocidades de salto (< 250 ms) continua um giro direto.
+    turn(move, duration, onStep) {
+      const turnDuration = duration === undefined ? this.animationDuration : Math.max(0, Number(duration));
+      const half = /^[URFDLB]2$/.test(String(move || '').trim());
+      if (!half || turnDuration < 250 || !this.available) return this._turnOnce(move, turnDuration);
+
+      const quarter = String(move).trim()[0];
+      return (async () => {
+        if (onStep) onStep(1);
+        await this._turnOnce(quarter, turnDuration);
+        const motion = this.motionId;
+        await new Promise((resolve) => setTimeout(resolve, Math.min(260, turnDuration * 0.4)));
+        if (motion !== this.motionId) return;
+        if (onStep) onStep(2);
+        await this._turnOnce(quarter, turnDuration);
+      })();
+    }
+
+    _turnOnce(move, duration) {
       if (!this.available) return Promise.resolve();
       if (this.isTurning) return Promise.reject(new Error('O cubo ainda está girando.'));
 

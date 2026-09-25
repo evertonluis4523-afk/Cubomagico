@@ -1342,7 +1342,7 @@
       U: 'face de cima', R: 'face da direita', F: 'face da frente',
       D: 'face de baixo', L: 'face da esquerda', B: 'face de trás'
     };
-    if (modifier === '2') return 'Gire a ' + names[face] + ' meia-volta (180°).';
+    if (modifier === '2') return 'Gire a ' + names[face] + ' duas vezes ¼ de volta (meia-volta, 180°). O sentido não importa.';
     if (modifier === "'") return 'Gire a ' + names[face] + ' ¼ de volta no sentido anti-horário.';
     return 'Gire a ' + names[face] + ' ¼ de volta no sentido horário.';
   }
@@ -1364,16 +1364,32 @@
     };
     const modifier = move.slice(1);
     const direction = modifier === '2'
-      ? 'meia-volta'
+      ? '2 giros de 90°'
       : modifier === "'" ? 'anti-horário' : 'horário';
 
     elements.cubeMoveHud.hidden = false;
     elements.cubeMoveCode.textContent = move;
     elements.cubeMoveCounter.textContent = 'Movimento ' + (index + 1) + ' de ' + total;
     elements.cubeMoveDirection.textContent = faceNames[move[0]] + ' · ' + direction;
-    elements.cubeMoveDegrees.textContent = modifier === '2' ? '180°' : '90°';
+    elements.cubeMoveDegrees.textContent = modifier === '2' ? '2×90°' : '90°';
+    elements.cubeMoveHud.classList.remove('is-step-1', 'is-step-2');
     elements.cubeMoveArrow.classList.toggle('is-prime', modifier === "'");
     elements.cubeMoveArrow.classList.toggle('is-half', modifier === '2');
+  }
+
+  // Durante a meia-volta o painel conta os dois giros: "giro 1 de 2", "giro 2 de 2".
+  const HUD_FACE_NAMES = {
+    U: 'Topo', R: 'Direita', F: 'Frente',
+    D: 'Base', L: 'Esquerda', B: 'Trás'
+  };
+
+  function showHalfTurnStep(step) {
+    const face = elements.cubeMoveCode.textContent[0];
+    if (!HUD_FACE_NAMES[face]) return;
+    elements.cubeMoveDirection.textContent = HUD_FACE_NAMES[face] + ' · giro ' + step + ' de 2';
+    elements.cubeMoveHud.classList.remove('is-step-1', 'is-step-2');
+    void elements.cubeMoveHud.offsetWidth;
+    elements.cubeMoveHud.classList.add('is-step-' + step);
   }
 
   function updatePlayback() {
@@ -1427,7 +1443,7 @@
     state.busy = true;
     updatePlayback();
     try {
-      await mainCube.turn(state.solution[state.solutionIndex], settings.duration);
+      await mainCube.turn(state.solution[state.solutionIndex], settings.duration, showHalfTurnStep);
       state.solutionIndex += 1;
       if (state.solutionIndex === state.solution.length && !settings.internal) {
         showToast('Cubo resolvido.');

@@ -842,6 +842,19 @@ body.is-solution-complete .stage-tap.is-next {
   opacity: .82;
 }
 
+/* A cada giro da meia-volta, a seta dá um pulso para marcar a contagem. */
+.cube-move-hud.is-step-1 .cube-move-arrow,
+.cube-move-hud.is-step-2 .cube-move-arrow {
+  animation: half-step .5s ease;
+}
+
+@keyframes half-step {
+  40% {
+    stroke: var(--accent);
+    transform: rotate(90deg) scale(1.12);
+  }
+}
+
 .cube-move-degrees {
   display: block;
   min-width: 29px;
