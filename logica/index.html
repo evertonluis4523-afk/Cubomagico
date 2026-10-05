@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#fff7e8">
+  <meta name="description" content="Jogos de lógica para crianças pequenas: sequências, contagem, diferenças, pares e quadrado mágico, com instruções faladas.">
+  <title>Jogos de Lógica</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="manifest" href="../manifest.webmanifest">
+  <link rel="icon" href="../favicon.ico" sizes="16x16 32x32 48x48">
+  <link rel="icon" type="image/svg+xml" href="../icons/icon.svg">
+  <link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="logica.css">
+</head>
+<body>
+  <!-- Início: escolha do jogo -->
+  <section class="screen" id="screen-home">
+    <header class="topbar">
+      <a class="pill" href="../" aria-label="Voltar para o Cubo 3D">← Cubo</a>
+      <div class="star-total" aria-label="Estrelas ganhas"><span aria-hidden="true">⭐</span> <b id="star-total">0</b></div>
+      <button class="round-btn" id="sound-toggle" type="button" aria-label="Som ligado" aria-pressed="true">🔊</button>
+    </header>
+
+    <h1 class="home-title">Jogos de lógica</h1>
+    <div class="game-grid" id="game-grid"></div>
+
+    <details class="parents">
+      <summary>Para os pais</summary>
+      <p>Cada jogo tem 10 níveis. Uma rodada tem poucas perguntas; com 2 ou 3 estrelas a criança sobe de nível, com 1 estrela repete o mesmo nível. Errar não tira nada: a opção errada some e ela tenta de novo.</p>
+      <p>As instruções são faladas pela voz do aparelho. Toque no alto-falante 🔈 durante o jogo para ouvir de novo. Se não houver voz em português instalada, o texto continua na tela para você ler junto.</p>
+      <p>O progresso fica salvo só neste aparelho.</p>
+      <button class="text-btn" id="reset-progress" type="button">Zerar progresso</button>
+    </details>
+  </section>
+
+  <!-- Jogo -->
+  <section class="screen" id="screen-play" hidden>
+    <header class="topbar">
+      <button class="round-btn" id="go-home" type="button" aria-label="Voltar para os jogos">🏠</button>
+      <div class="dots" id="dots" aria-hidden="true"></div>
+      <button class="round-btn" id="repeat-prompt" type="button" aria-label="Ouvir de novo">🔈</button>
+    </header>
+    <p class="prompt" id="prompt" aria-live="polite"></p>
+    <div class="stage" id="stage"></div>
+    <div class="options" id="options"></div>
+  </section>
+
+  <!-- Fim da rodada -->
+  <section class="screen" id="screen-end" hidden>
+    <div class="end-box">
+      <p class="end-title" id="end-title">Parabéns!</p>
+      <div class="end-stars" id="end-stars" aria-live="polite"></div>
+      <p class="end-level" id="end-level"></p>
+      <button class="big-btn" id="play-again" type="button">Jogar de novo ▶</button>
+      <button class="big-btn is-light" id="end-home" type="button">Outros jogos</button>
+    </div>
+    <div class="confetti" id="confetti" aria-hidden="true"></div>
+  </section>
+
+  <script src="logica.js"></script>
+</body>
+</html>

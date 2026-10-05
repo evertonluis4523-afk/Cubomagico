@@ -7,7 +7,8 @@ Aplicativo estático em HTML, CSS e JavaScript para:
 - calcular uma solução pelo algoritmo de duas fases de Kociemba;
 - reproduzir cada movimento no cubo 3D;
 - avançar, voltar, pausar e alterar a velocidade da animação;
-- aprender o método iniciante pela aba **Tutorial**.
+- aprender o método iniciante pela aba **Tutorial**;
+- jogar **jogos de lógica para crianças pequenas** (botão de quebra-cabeça no topo, ou `logica/`).
 
 O cálculo ocorre inteiramente no navegador. Não há servidor, banco de dados, login ou coleta de cores.
 
@@ -65,6 +66,7 @@ manifest.webmanifest       Nome, cores e ícones para instalar como app
 favicon.ico, icons/        Ícone do cubo (aba, atalho no PC e tela inicial)
 vendor/three/              Motor gráfico 3D (Three.js)
 vendor/cubejs/             Modelo e resolvedor do cubo (roda em segundo plano)
+logica/                    Jogos de lógica infantis (página, visual e jogos)
 THIRD_PARTY_LICENSES.md    Créditos das bibliotecas
 CHANGELOG.md               Histórico de mudanças
 .nojekyll                  Mantém os arquivos intactos no GitHub Pages
@@ -85,6 +87,21 @@ Em **Add file → Upload files**, antes de clicar em *Commit changes*, troque o 
 - Toque (ou clique) no cubo para avançar; no terço esquerdo, volta. Arrastar continua girando a câmera.
 - No computador: setas ← → avançam e voltam, espaço reproduz ou pausa.
 - As cores e o movimento atual ficam salvos no navegador: ao reabrir, o app continua de onde parou.
+
+## Jogos de lógica (`logica/`)
+
+Feitos para crianças a partir de 4–5 anos, que ainda não leem: cada instrução é falada
+pela voz do aparelho e tudo funciona só com toques. São seis jogos, cada um com 10 níveis:
+
+- **O que vem depois?** — completar sequências de formas (AB, AAB, ABC…);
+- **Vamos contar** — contar objetos (até 3 no começo, até 10 depois);
+- **Qual é diferente?** — achar o que muda de cor, forma ou tamanho;
+- **Ache o igual** — achar a figura idêntica ao modelo;
+- **Onde tem mais?** — comparar quantidades (e, mais adiante, "onde tem menos?");
+- **Quadrado mágico** — completar a grade em que cada fileira tem um de cada.
+
+As perguntas são geradas na hora, então não se repetem nem acabam. Com 2 ou 3 estrelas a
+criança sobe de nível; com 1, repete. O progresso fica salvo no navegador do aparelho.
 
 ## Compatibilidade
 

@@ -4,6 +4,13 @@ Os primeiros envios (20/09/2026) entraram pelo site do GitHub com a mensagem gen
 "Add files via upload". O resumo abaixo foi reconstruído a partir do conteúdo de cada um,
 para que o histórico faça sentido sem precisar abrir os diffs.
 
+## 05/10/2026
+
+- Jogos de lógica para crianças pequenas na pasta `logica/` (botão de quebra-cabeça no
+  topo do app): sequências, contagem, qual é diferente, ache o igual, onde tem mais e
+  quadrado mágico. Instruções faladas, 10 níveis por jogo, estrelas e progresso salvo
+  no aparelho. Funciona sem internet depois da primeira visita (`sw.js` → `cubo-3d-v4`).
+
 ## 25/09/2026
 
 - Sem zoom por toque duplo na página (o zoom de pinça continua) e sem zoom automático

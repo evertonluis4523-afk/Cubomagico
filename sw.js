@@ -1,6 +1,6 @@
 // Mantém o app funcionando sem internet depois da primeira visita.
 // Estratégia "rede primeiro": online sempre busca a versão nova; offline usa a cópia salva.
-const CACHE = 'cubo-3d-v3';
+const CACHE = 'cubo-3d-v4';
 const PRECACHE = [
   './',
   'index.html',
@@ -20,7 +20,11 @@ const PRECACHE = [
   'icons/favicon-32.png',
   'vendor/cubejs/worker.js',
   'vendor/cubejs/cube.js',
-  'vendor/cubejs/solve.js'
+  'vendor/cubejs/solve.js',
+  'logica/',
+  'logica/index.html',
+  'logica/logica.css',
+  'logica/logica.js'
 ];
 
 self.addEventListener('install', (event) => {
