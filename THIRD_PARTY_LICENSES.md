@@ -16,3 +16,10 @@ Este projeto inclui cópias locais das bibliotecas abaixo para funcionar sem dep
 - Licença: MIT
 - Arquivos: `vendor/cubejs/`
 - Texto integral da licença: `vendor/cubejs/LICENSE`
+
+## Fonte Fredoka
+
+- Projeto: https://github.com/hafontia/Fredoka-One (via Google Fonts)
+- Licença: SIL Open Font License 1.1
+- Arquivo: `logica/fredoka.woff2` (só caracteres latinos)
+- Texto integral da licença: `logica/FREDOKA-OFL.txt`

@@ -40,14 +40,16 @@
     return `${(50 + r * Math.cos(a)).toFixed(1)},${(53 + r * Math.sin(a)).toFixed(1)}`;
   }).join(' ');
 
-  const paint = (fill) => `fill="${fill}" stroke="rgba(0,0,0,.22)" stroke-width="4" stroke-linejoin="round"`;
+  // Escurece uma cor (para o contorno e a sombra das formas).
+  const shade = (hex, f) => '#' + [1, 3, 5].map((i) => Math.round(parseInt(hex.slice(i, i + 2), 16) * f)
+    .toString(16).padStart(2, '0')).join('');
   const SHAPES = {
-    circulo: { name: 'círculo', fem: false, svg: (f) => `<circle cx="50" cy="50" r="40" ${paint(f)}/>` },
-    quadrado: { name: 'quadrado', fem: false, svg: (f) => `<rect x="12" y="12" width="76" height="76" rx="10" ${paint(f)}/>` },
-    triangulo: { name: 'triângulo', fem: false, svg: (f) => `<path d="M50 9 L91 86 L9 86 Z" ${paint(f)}/>` },
-    estrela: { name: 'estrela', fem: true, svg: (f) => `<polygon points="${starPoints}" ${paint(f)}/>` },
-    coracao: { name: 'coração', fem: false, svg: (f) => `<path d="M50 87 C20 65 7 47 7 31 C7 18 17 9 30 9 C39 9 46 14 50 22 C54 14 61 9 70 9 C83 9 93 18 93 31 C93 47 80 65 50 87 Z" ${paint(f)}/>` },
-    losango: { name: 'losango', fem: false, svg: (f) => `<path d="M50 6 L90 50 L50 94 L10 50 Z" ${paint(f)}/>` }
+    circulo: { name: 'círculo', fem: false, geom: '<circle cx="50" cy="50" r="40"/>' },
+    quadrado: { name: 'quadrado', fem: false, geom: '<rect x="12" y="12" width="76" height="76" rx="14"/>' },
+    triangulo: { name: 'triângulo', fem: false, geom: '<path d="M50 10 L91 86 L9 86 Z"/>' },
+    estrela: { name: 'estrela', fem: true, geom: `<polygon points="${starPoints}"/>` },
+    coracao: { name: 'coração', fem: false, geom: '<path d="M50 87 C20 65 7 47 7 31 C7 18 17 9 30 9 C39 9 46 14 50 22 C54 14 61 9 70 9 C83 9 93 18 93 31 C93 47 80 65 50 87 Z"/>' },
+    losango: { name: 'losango', fem: false, geom: '<path d="M50 6 L90 50 L50 94 L10 50 Z"/>' }
   };
   const SHAPE_KEYS = Object.keys(SHAPES);
 
@@ -58,12 +60,50 @@
     const small = it.size && it.size < 1 ? (s.fem ? ' pequena' : ' pequeno') : '';
     return `${s.name} ${s.fem ? c.f : c.m}${small}`;
   };
+  // Forma com volume: cor cheia, sombra embaixo e brilho em cima (recortados pela própria forma).
+  let clipSeq = 0;
   const shapeSVG = (it) => {
-    const body = SHAPES[it.shape].svg(COLORS[it.color].hex);
+    const hex = COLORS[it.color].hex;
+    const geom = SHAPES[it.shape].geom;
+    const id = `cl${++clipSeq}`;
+    const body = `<clipPath id="${id}">${geom}</clipPath>
+      <g fill="${hex}">${geom}</g>
+      <g clip-path="url(#${id})">
+        <ellipse cx="50" cy="100" rx="60" ry="30" fill="#000" opacity=".14"/>
+        <ellipse cx="34" cy="22" rx="30" ry="16" fill="#fff" opacity=".42"/>
+      </g>
+      <g fill="none" stroke="${shade(hex, 0.72)}" stroke-width="5" stroke-linejoin="round">${geom}</g>`;
     const s = it.size || 1;
     const g = s === 1 ? body : `<g transform="translate(50 50) scale(${s}) translate(-50 -50)">${body}</g>`;
     return `<svg class="shape" viewBox="0 0 100 100" aria-hidden="true">${g}</svg>`;
   };
+
+  // Mascote: um cubinho mágico com rosto. As classes is-happy / is-oops trocam a boca.
+  // Frente amarela (uma face resolvida) para o rosto ficar legível.
+  const mascotSVG = () => `<svg class="mascot-svg" viewBox="0 14 120 110" aria-hidden="true">
+    <ellipse class="m-shadow" cx="60" cy="119" rx="36" ry="5" fill="#000" opacity=".16"/>
+    <g class="m-body">
+      <rect x="30" y="106" width="16" height="10" rx="5" fill="#241b36"/>
+      <rect x="74" y="106" width="16" height="10" rx="5" fill="#241b36"/>
+      <rect x="8" y="20" width="104" height="90" rx="22" fill="#241b36"/>
+      ${range(9).map((i) => `<rect x="${15 + (i % 3) * 31}" y="${27 + Math.floor(i / 3) * 27}" width="28" height="24" rx="8" fill="#ffc61a"/>`).join('')}
+      <rect x="15" y="27" width="90" height="8" rx="4" fill="#fff" opacity=".35"/>
+      <g class="m-eyes">
+        <ellipse cx="41" cy="60" rx="13" ry="14" fill="#fff" stroke="#241b36" stroke-width="3.5"/>
+        <ellipse cx="79" cy="60" rx="13" ry="14" fill="#fff" stroke="#241b36" stroke-width="3.5"/>
+        <circle cx="43" cy="63" r="7" fill="#241b36"/><circle cx="81" cy="63" r="7" fill="#241b36"/>
+        <circle cx="46" cy="59" r="2.6" fill="#fff"/><circle cx="84" cy="59" r="2.6" fill="#fff"/>
+      </g>
+      <ellipse cx="24" cy="82" rx="7" ry="4.5" fill="#ff6f91" opacity=".75"/>
+      <ellipse cx="96" cy="82" rx="7" ry="4.5" fill="#ff6f91" opacity=".75"/>
+      <g class="m-smile">
+        <path d="M46 82 Q60 100 74 82 Z" fill="#8a1f3a" stroke="#241b36" stroke-width="3.5" stroke-linejoin="round"/>
+        <path d="M52 90 Q60 96 68 90 Q60 86 52 90 Z" fill="#ff7a9a"/>
+      </g>
+      <path class="m-oops" d="M49 91 Q60 82 71 91" fill="none" stroke="#241b36" stroke-width="4.5" stroke-linecap="round"/>
+    </g>
+  </svg>`;
+
   const randomItem = () => ({ shape: pick(SHAPE_KEYS), color: pick(COLOR_KEYS) });
 
   // Objetos para contar (com plural e gênero para a frase falada).
@@ -82,6 +122,7 @@
 
   const GAMES = {
     sequencia: {
+      theme: ['#9b6bff', '#6d3fe0'],
       title: 'O que vem depois?',
       icon: () => [{ shape: 'circulo', color: 'vermelho' }, { shape: 'quadrado', color: 'azul' }, { shape: 'circulo', color: 'vermelho' }]
         .map(shapeSVG).join('') + '<span class="q-mark">?</span>',
@@ -125,7 +166,7 @@
         }
         return {
           prompt: 'O que vem depois?',
-          stage: `<div class="seq" style="--n:${total + 1}">${seq.map((it) => `<div class="seq-cell">${shapeSVG(it)}</div>`).join('')}<div class="seq-cell is-slot" id="slot">?</div></div>`,
+          stage: `<div class="seq board" style="--n:${total + 1}">${seq.map((it) => `<div class="seq-cell">${shapeSVG(it)}</div>`).join('')}<div class="seq-cell is-slot" id="slot">?</div></div>`,
           options: shuffle(opts).map((it) => ({ html: shapeSVG(it), label: itemLabel(it), correct: itemKey(it) === itemKey(answer) })),
           onCorrect(stage) {
             const slot = stage.querySelector('#slot');
@@ -137,6 +178,7 @@
     },
 
     contar: {
+      theme: ['#ff9a3d', '#ec5f12'],
       title: 'Vamos contar',
       icon: () => '<span class="icon-emoji">🍎🍎🍎</span><span class="icon-num">3</span>',
       rounds: 5,
@@ -150,13 +192,14 @@
         const nums = shuffle([n, others[0], others[1]]);
         return {
           prompt: `Quant${obj.f ? 'as' : 'os'} ${obj.p} tem aqui?`,
-          stage: emojiGroup(obj.e, n, 'count'),
+          stage: emojiGroup(obj.e, n, 'count board'),
           options: nums.map((x) => ({ html: `<span class="num">${x}</span>`, label: String(x), correct: x === n }))
         };
       }
     },
 
     diferente: {
+      theme: ['#25c4b0', '#0e8a7b'],
       title: 'Qual é diferente?',
       icon: () => ['azul', 'azul', 'vermelho', 'azul'].map((c) => shapeSVG({ shape: 'circulo', color: c })).join(''),
       rounds: 5,
@@ -181,6 +224,7 @@
     },
 
     igual: {
+      theme: ['#ff6fa3', '#d93a78'],
       title: 'Ache o igual',
       icon: () => shapeSVG({ shape: 'estrela', color: 'amarelo' }) + '<span class="icon-eq">=</span>' + shapeSVG({ shape: 'estrela', color: 'amarelo' }),
       rounds: 5,
@@ -206,7 +250,7 @@
         }
         return {
           prompt: 'Toque no que é igual a este.',
-          stage: `<div class="model">${shapeSVG(model)}</div>`,
+          stage: `<div class="model board">${shapeSVG(model)}</div>`,
           layout: opts.length === 4 ? 'grid-2' : '',
           options: shuffle(opts).map((it) => ({ html: shapeSVG(it), label: itemLabel(it), correct: itemKey(it) === itemKey(model) }))
         };
@@ -214,6 +258,7 @@
     },
 
     mais: {
+      theme: ['#5fd36f', '#2f9a45'],
       title: 'Onde tem mais?',
       icon: () => '<span class="icon-emoji small">🐟</span><span class="icon-vs">|</span><span class="icon-emoji small">🐟🐟🐟</span>',
       rounds: 5,
@@ -241,6 +286,7 @@
     },
 
     quadrado: {
+      theme: ['#4fb0ff', '#1f74d6'],
       title: 'Quadrado mágico',
       icon: () => '<span class="mini-grid">' + ['vermelho', 'azul', 'amarelo', 'azul', 'amarelo', 'vermelho', 'amarelo', 'vermelho', null]
         .map((c) => (c ? `<i style="background:${COLORS[c].hex}"></i>` : '<i class="empty">?</i>')).join('') + '</span>',
@@ -389,10 +435,10 @@
     $('sound-toggle').setAttribute('aria-label', state.sound ? 'Som ligado' : 'Som desligado');
     $('game-grid').innerHTML = Object.entries(GAMES).map(([id, g]) => {
       const lv = levelOf(id);
-      return `<button class="game-card" type="button" data-game="${id}">
+      return `<button class="game-card" type="button" data-game="${id}" style="--c1:${g.theme[0]};--c2:${g.theme[1]}">
         <span class="game-icon" aria-hidden="true">${g.icon()}</span>
         <span class="game-name">${g.title}</span>
-        <span class="game-level" aria-label="Nível ${lv} de ${MAX_LEVEL}">${range(MAX_LEVEL).map((i) => `<i class="${i < lv ? 'on' : ''}"></i>`).join('')}</span>
+        <span class="game-level">Nível ${lv}</span>
       </button>`;
     }).join('');
   }
@@ -404,6 +450,10 @@
   function startGame(id) {
     clearTimeout(nextTimer);
     cur = { id, game: GAMES[id], level: levelOf(id), index: 0, mistakes: 0, lastPrompt: null, q: null, locked: false };
+    for (const el of [screens.play, screens.end]) {
+      el.style.setProperty('--c1', cur.game.theme[0]);
+      el.style.setProperty('--c2', cur.game.theme[1]);
+    }
     show('play');
     renderDots();
     nextQuestion();
@@ -412,6 +462,17 @@
   function renderDots() {
     $('dots').innerHTML = range(cur.game.rounds)
       .map((i) => `<i class="${i < cur.index ? 'done' : i === cur.index ? 'now' : ''}"></i>`).join('');
+  }
+
+  // Reação do mascote: pula quando acerta, balança quando erra.
+  let mascotTimer = 0;
+  function react(kind) {
+    const m = $('mascot');
+    clearTimeout(mascotTimer);
+    m.classList.remove('is-happy', 'is-oops');
+    void m.offsetWidth;
+    m.classList.add(kind === 'right' ? 'is-happy' : 'is-oops');
+    mascotTimer = setTimeout(() => m.classList.remove('is-happy', 'is-oops'), 1100);
   }
 
   function nextQuestion() {
@@ -423,6 +484,7 @@
     const stage = $('stage');
     const options = $('options');
     $('prompt').textContent = q.prompt;
+    stage.classList.toggle('is-empty', !q.stage && !q.setup);
     stage.innerHTML = q.stage || '';
     options.innerHTML = '';
     options.className = `options ${q.layout || ''}`;
@@ -447,6 +509,7 @@
       wrong(btn, disable = true) {
         cur.mistakes++;
         sfx('wrong');
+        react('wrong');
         say(pick(TRY_AGAIN));
         btn.classList.remove('shake');
         void btn.offsetWidth;
@@ -474,6 +537,7 @@
     cur.locked = true;
     btn.classList.add('is-right');
     sfx('right');
+    react('right');
     say(pick(PRAISE));
     cur.index++;
     renderDots();
@@ -489,7 +553,7 @@
     save();
 
     $('end-title').textContent = stars === 3 ? 'Perfeito!' : stars === 2 ? 'Muito bem!' : 'Você conseguiu!';
-    $('end-stars').innerHTML = range(3).map((i) => `<span class="${i < stars ? 'on' : ''}" style="animation-delay:${0.15 + i * 0.25}s">⭐</span>`).join('');
+    $('end-stars').innerHTML = range(3).map((i) => `<span class="${i < stars ? 'on' : ''}" style="animation-delay:${0.15 + i * 0.25}s">${shapeSVG({ shape: 'estrela', color: 'amarelo' })}</span>`).join('');
     $('end-stars').setAttribute('aria-label', `${stars} de 3 estrelas`);
     $('end-level').textContent = g.level > before ? `Subiu para o nível ${g.level}!` : before === MAX_LEVEL ? 'Nível máximo!' : `Nível ${g.level}`;
     show('end');
@@ -529,6 +593,7 @@
   $('end-home').addEventListener('click', leaveGame);
   $('play-again').addEventListener('click', () => startGame(cur.id));
   $('repeat-prompt').addEventListener('click', () => { if (cur && cur.q) say(cur.q.prompt); });
+  $('mascot').addEventListener('click', () => { if (cur && cur.q) say(cur.q.prompt); });
   $('sound-toggle').addEventListener('click', () => {
     state.sound = !state.sound;
     if (!state.sound && 'speechSynthesis' in window) speechSynthesis.cancel();
@@ -546,6 +611,8 @@
   if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
     navigator.serviceWorker.register('../sw.js', { scope: '../' }).catch(() => {});
   }
+
+  for (const el of document.querySelectorAll('.mascot-slot')) el.innerHTML = mascotSVG();
 
   // Abrir direto num jogo (ex.: recarregar a página no meio) volta para o início.
   if (history.state && history.state.jogo) history.replaceState(null, '');

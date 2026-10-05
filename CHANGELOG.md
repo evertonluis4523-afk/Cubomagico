@@ -9,7 +9,10 @@ para que o histórico faça sentido sem precisar abrir os diffs.
 - Jogos de lógica para crianças pequenas na pasta `logica/` (botão de quebra-cabeça no
   topo do app): sequências, contagem, qual é diferente, ache o igual, onde tem mais e
   quadrado mágico. Instruções faladas, 10 níveis por jogo, estrelas e progresso salvo
-  no aparelho. Funciona sem internet depois da primeira visita (`sw.js` → `cubo-3d-v4`).
+  no aparelho. Funciona sem internet depois da primeira visita (`sw.js` → `cubo-3d-v5`).
+- Visual dos jogos refeito: mascote (um cubinho que pula quando acerta e faz careta quando
+  erra), cor própria para cada jogo, formas com brilho e volume, botões que afundam ao
+  tocar e fonte arredondada Fredoka (guardada em `logica/`, funciona sem internet).
 
 ## 25/09/2026
 
