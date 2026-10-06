@@ -1117,27 +1117,46 @@
     const top = (guideRect.top - stageRect.top) * scaleY;
     const width = guideRect.width * scaleX;
     const height = guideRect.height * scaleY;
-    const radius = Math.max(3, Math.round(Math.min(width, height) / 42));
+    const sticker = Math.min(width, height) / 3;
     const samples = [];
+
+    // Lê uma área de cada quadrado e ignora os pixels mais claros (reflexo no
+    // adesivo) e os mais escuros (borda preta, sombra) antes de tirar a mediana.
+    const readPatch = (centerX, centerY, half) => {
+      const left = Math.max(0, Math.round(centerX - half));
+      const top = Math.max(0, Math.round(centerY - half));
+      const size = Math.max(1, Math.round(half * 2));
+      const data = context.getImageData(left, top, Math.min(canvas.width - left, size), Math.min(canvas.height - top, size)).data;
+      const pixels = [];
+      for (let pixel = 0; pixel < data.length; pixel += 4) {
+        pixels.push([data[pixel], data[pixel + 1], data[pixel + 2]]);
+      }
+      return pixels;
+    };
+    const robustColor = (pixels) => {
+      pixels.sort((a, b) => (a[0] * .299 + a[1] * .587 + a[2] * .114) - (b[0] * .299 + b[1] * .587 + b[2] * .114));
+      const kept = pixels.slice(Math.floor(pixels.length * .1), Math.max(Math.floor(pixels.length * .1) + 1, Math.floor(pixels.length * .65)));
+      const channel = (index) => {
+        const values = kept.map((pixel) => pixel[index]).sort((a, b) => a - b);
+        return values[Math.floor(values.length / 2)];
+      };
+      return { r: channel(0), g: channel(1), b: channel(2) };
+    };
 
     for (let row = 0; row < 3; row += 1) {
       for (let column = 0; column < 3; column += 1) {
         const centerX = left + width * ((column + .5) / 3);
         const centerY = top + height * ((row + .5) / 3);
-        const sampleLeft = Math.max(0, Math.round(centerX) - radius);
-        const sampleTop = Math.max(0, Math.round(centerY) - radius);
-        const sampleWidth = Math.min(canvas.width - sampleLeft, radius * 2 + 1);
-        const sampleHeight = Math.min(canvas.height - sampleTop, radius * 2 + 1);
-        const data = context.getImageData(sampleLeft, sampleTop, sampleWidth, sampleHeight).data;
-        const channels = [[], [], []];
-        for (let pixel = 0; pixel < data.length; pixel += 4) {
-          channels[0].push(data[pixel]);
-          channels[1].push(data[pixel + 1]);
-          channels[2].push(data[pixel + 2]);
+        let pixels;
+        if (row === 1 && column === 1) {
+          // Centro da face: lê perto dos cantos do adesivo, fugindo de logotipo no meio.
+          const offset = sticker * .3;
+          pixels = [[-1, -1], [1, -1], [-1, 1], [1, 1]].flatMap(([dx, dy]) =>
+            readPatch(centerX + dx * offset, centerY + dy * offset, Math.max(3, sticker * .09)));
+        } else {
+          pixels = readPatch(centerX, centerY, Math.max(4, sticker * .22));
         }
-        channels.forEach((values) => values.sort((a, b) => a - b));
-        const middle = Math.floor(channels[0].length / 2);
-        samples.push({ r: channels[0][middle], g: channels[1][middle], b: channels[2][middle] });
+        samples.push(robustColor(pixels));
       }
     }
     return samples;
@@ -1316,37 +1335,125 @@
     return assignment;
   }
 
+  // Classifica as 54 amostras em 6 cores, 9 de cada.
+  // Não confia só no centro de cada face (pode ter logotipo ou luz diferente):
+  // repete algumas rodadas de "classificar → recalcular a cor de referência pela
+  // mediana dos 9 quadrados → estimar a correção de luz de cada foto".
   function classifyPhotoColors(captures) {
-    const prototypes = Object.fromEntries(SERIAL_FACE_ORDER.map((face) => [face, rgbToLab(captures[face][4])]));
-    const items = [];
-    SERIAL_FACE_ORDER.forEach((face) => {
-      captures[face].forEach((rgb, index) => {
-        if (index !== 4) items.push({ face: face, index: index, lab: rgbToLab(rgb) });
-      });
-    });
+    // Tenta partir das cores padrão; se a leitura der um cubo impossível, tenta
+    // partir dos centros das fotos. Fica com a primeira que formar um cubo válido
+    // (ou, se nenhuma formar, com a de menor diferença total).
+    const attempts = [];
+    for (const start of ['standard', 'centers']) {
+      const result = classifyPhotoColorsFrom(captures, start);
+      const facelets = SERIAL_FACE_ORDER.map((face) => result.faces[face].join('')).join('');
+      if (typeof faceletProblem === 'function' && !faceletProblem(facelets)) return result;
+      attempts.push(result);
+    }
+    return attempts.sort((a, b) => a.totalCost - b.totalCost)[0];
+  }
+
+  function classifyPhotoColorsFrom(captures, start) {
+    const median = (values) => {
+      const sorted = values.slice().sort((a, b) => a - b);
+      return sorted[Math.floor(sorted.length / 2)];
+    };
+    const gains = Object.fromEntries(SERIAL_FACE_ORDER.map((face) => [face, [1, 1, 1]]));
+    const corrected = (face, index) => {
+      const sample = captures[face][index];
+      const gain = gains[face];
+      return {
+        r: Math.min(255, sample.r * gain[0]),
+        g: Math.min(255, sample.g * gain[1]),
+        b: Math.min(255, sample.b * gain[2])
+      };
+    };
+    // Ponto de partida: as cores padrão do cubo, ou o centro de cada face. No modo
+    // "centros", um centro que não se parece com nenhum outro quadrado (logotipo,
+    // reflexo) é trocado pela cor padrão.
+    const STANDARD_RGB = {
+      U: { r: 235, g: 205, b: 40 }, R: { r: 190, g: 30, b: 40 }, F: { r: 20, g: 80, b: 190 },
+      D: { r: 230, g: 230, b: 228 }, L: { r: 245, g: 115, b: 25 }, B: { r: 20, g: 150, b: 70 }
+    };
+    const allLabs = [];
+    SERIAL_FACE_ORDER.forEach((face) => captures[face].forEach((sample) => allLabs.push(rgbToLab(sample))));
+    let referenceRgb = Object.fromEntries(SERIAL_FACE_ORDER.map((face) => {
+      if (start === 'standard') return [face, STANDARD_RGB[face]];
+      const center = rgbToLab(captures[face][4]);
+      const similar = allLabs.filter((lab) => labDistance(lab, center) < 22).length - 1;
+      return [face, similar >= 3 ? captures[face][4] : STANDARD_RGB[face]];
+    }));
+    let colorOf = null;
+    let items = [];
+    let prototypes = {};
     const slots = [];
     SERIAL_FACE_ORDER.forEach((face) => {
       for (let count = 0; count < 8; count += 1) slots.push(face);
     });
-    const costs = items.map((item) => slots.map((face) => labDistance(item.lab, prototypes[face])));
-    const assignment = hungarian(costs);
+
+    for (let round = 0; round < 6; round += 1) {
+      prototypes = Object.fromEntries(SERIAL_FACE_ORDER.map((face) => [face, rgbToLab(referenceRgb[face])]));
+      items = [];
+      SERIAL_FACE_ORDER.forEach((face) => {
+        captures[face].forEach((_, index) => {
+          if (index !== 4) items.push({ face: face, index: index, lab: rgbToLab(corrected(face, index)) });
+        });
+      });
+      const costs = items.map((item) => slots.map((face) => labDistance(item.lab, prototypes[face])));
+      const assignment = hungarian(costs);
+      const next = Object.fromEntries(SERIAL_FACE_ORDER.map((face) => [face, Array(9).fill(face)]));
+      items.forEach((item, itemIndex) => { next[item.face][item.index] = slots[assignment[itemIndex]]; });
+      const changed = !colorOf || SERIAL_FACE_ORDER.some((face) => next[face].some((color, index) => color !== colorOf[face][index]));
+      colorOf = next;
+      if (!changed) break;
+
+      // Nova referência de cada cor: mediana dos 9 quadrados dessa cor.
+      const members = Object.fromEntries(SERIAL_FACE_ORDER.map((color) => [color, []]));
+      SERIAL_FACE_ORDER.forEach((face) => {
+        for (let index = 0; index < 9; index += 1) members[colorOf[face][index]].push(corrected(face, index));
+      });
+      referenceRgb = Object.fromEntries(SERIAL_FACE_ORDER.map((color) => [color, {
+        r: median(members[color].map((rgb) => rgb.r)),
+        g: median(members[color].map((rgb) => rgb.g)),
+        b: median(members[color].map((rgb) => rgb.b))
+      }]));
+
+      // Correção de luz de cada foto: quanto ela fica, em cada canal, abaixo ou acima das referências.
+      SERIAL_FACE_ORDER.forEach((face) => {
+        ['r', 'g', 'b'].forEach((channel, channelIndex) => {
+          const ratios = [];
+          for (let index = 0; index < 9; index += 1) {
+            const raw = captures[face][index][channel];
+            const target = referenceRgb[colorOf[face][index]][channel] / gains[face][channelIndex];
+            if (raw >= 12 && target >= 12) ratios.push(target / raw);
+          }
+          if (ratios.length >= 3) gains[face][channelIndex] *= Math.max(.6, Math.min(1.6, median(ratios)));
+        });
+      });
+      // Mantém a escala geral estável: média geométrica dos ganhos = 1 em cada canal.
+      [0, 1, 2].forEach((channelIndex) => {
+        const mean = Math.exp(SERIAL_FACE_ORDER.reduce((total, face) => total + Math.log(gains[face][channelIndex]), 0) / 6);
+        SERIAL_FACE_ORDER.forEach((face) => { gains[face][channelIndex] /= mean; });
+      });
+    }
+
     const faces = createBlankFaces();
     const uncertain = new Set();
-
-    items.forEach((item, itemIndex) => {
-      const color = slots[assignment[itemIndex]];
-      faces[item.face][item.index] = color;
-      const distances = SERIAL_FACE_ORDER.map((face) => ({ face: face, value: labDistance(item.lab, prototypes[face]) }))
-        .sort((left, right) => left.value - right.value);
-      const assignedDistance = labDistance(item.lab, prototypes[color]);
-      const other = distances.find((entry) => entry.face !== color);
-      if (assignedDistance > 34 || !other || other.value - assignedDistance < 6) {
-        uncertain.add(item.face + '-' + item.index);
-      }
-    });
     const labs = {};
-    items.forEach((item) => { labs[item.face + '-' + item.index] = item.lab; });
-    return { faces: faces, uncertain: uncertain, labs: labs, prototypes: prototypes };
+    let totalCost = 0;
+    items.forEach((item) => {
+      const color = colorOf[item.face][item.index];
+      faces[item.face][item.index] = color;
+      labs[item.face + '-' + item.index] = item.lab;
+      const assignedDistance = labDistance(item.lab, prototypes[color]);
+      totalCost += assignedDistance;
+      const other = SERIAL_FACE_ORDER
+        .filter((face) => face !== color)
+        .map((face) => labDistance(item.lab, prototypes[face]))
+        .sort((a, b) => a - b)[0];
+      if (assignedDistance > 34 || other - assignedDistance < 6) uncertain.add(item.face + '-' + item.index);
+    });
+    return { faces: faces, uncertain: uncertain, labs: labs, prototypes: prototypes, totalCost: totalCost };
   }
 
   function renderPhotoReview() {
