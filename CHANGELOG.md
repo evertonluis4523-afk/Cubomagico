@@ -4,6 +4,11 @@ Os primeiros envios (20/09/2026) entraram pelo site do GitHub com a mensagem gen
 "Add files via upload". O resumo abaixo foi reconstruído a partir do conteúdo de cada um,
 para que o histórico faça sentido sem precisar abrir os diffs.
 
+## 06/10/2026
+
+- Zoom por toque duplo bloqueado também por código (`no-zoom.js`), no cubo e nos jogos:
+  o Safari do iPhone ignorava a regra só de CSS. Toques rápidos continuam contando.
+
 ## 05/10/2026
 
 - Jogos de lógica para crianças pequenas na pasta `logica/` (botão de quebra-cabeça no
