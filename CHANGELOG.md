@@ -6,6 +6,8 @@ para que o histórico faça sentido sem precisar abrir os diffs.
 
 ## 06/10/2026
 
+- Cubo 3D sem zoom: dois dedos ou a rodinha do mouse ampliavam o cubo até sair do
+  quadro. Arrastar para girar continua; a rodinha volta a rolar a página.
 - Zoom por toque duplo bloqueado também por código (`no-zoom.js`), no cubo e nos jogos:
   o Safari do iPhone ignorava a regra só de CSS. Toques rápidos continuam contando.
 

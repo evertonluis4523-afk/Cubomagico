@@ -144,10 +144,10 @@
       this.controls.enableDamping = true;
       this.controls.dampingFactor = 0.075;
       this.controls.enablePan = false;
-      this.controls.minDistance = this.options.compact ? 5.4 : 5.2;
-      this.controls.maxDistance = 12;
+      // Sem zoom: dois dedos ou a rodinha do mouse ampliavam o cubo até sair do
+      // quadro (e a rodinha deixava de rolar a página). Só girar continua.
+      this.controls.enableZoom = false;
       this.controls.rotateSpeed = 0.72;
-      this.controls.zoomSpeed = 0.8;
       this.controls.target.set(0, 0, 0);
 
       this.resetCamera();
