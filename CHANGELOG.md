@@ -6,6 +6,9 @@ para que o histórico faça sentido sem precisar abrir os diffs.
 
 ## 06/10/2026
 
+- Leitura por foto bem mais confiável: lê uma área de cada quadrado ignorando reflexos e
+  bordas, foge do logotipo no centro e corrige a luz de cada foto. Em teste com fotos
+  simuladas (reflexos, logo, luz variando), leituras perfeitas passaram de 5/20 para 20/20.
 - Cubo 3D sem zoom: dois dedos ou a rodinha do mouse ampliavam o cubo até sair do
   quadro. Arrastar para girar continua; a rodinha volta a rolar a página.
 - Zoom por toque duplo bloqueado também por código (`no-zoom.js`), no cubo e nos jogos:
